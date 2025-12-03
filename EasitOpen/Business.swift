@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-class Business {
+class Business: Identifiable {
     var id: UUID
     var name: String
     var address: String

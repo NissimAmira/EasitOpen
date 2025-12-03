@@ -4,6 +4,8 @@ import SwiftData
 struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var businesses: [Business]
+    @State private var showDeleteAlert = false
+    @State private var businessToDelete: Business?
     
     var body: some View {
         NavigationStack {
@@ -35,9 +37,24 @@ struct DashboardView: View {
                 // List of businesses
                 List {
                     ForEach(businesses) { business in
-                        BusinessCardView(business: business)
+                        NavigationLink(destination: BusinessDetailView(business: business)) {
+                            BusinessCardView(business: business)
+                        }
                     }
-                    .onDelete(perform: deleteBusinesses)
+                    .onDelete(perform: promptDelete)
+                }
+                .alert("Remove Business", isPresented: $showDeleteAlert) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Remove", role: .destructive) {
+                        if let business = businessToDelete {
+                            modelContext.delete(business)
+                            businessToDelete = nil
+                        }
+                    }
+                } message: {
+                    if let business = businessToDelete {
+                        Text("Are you sure you want to remove \(business.name) from your dashboard?")
+                    }
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -76,9 +93,10 @@ struct DashboardView: View {
         modelContext.insert(business)
     }
     
-    private func deleteBusinesses(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(businesses[index])
+    private func promptDelete(at offsets: IndexSet) {
+        if let index = offsets.first {
+            businessToDelete = businesses[index]
+            showDeleteAlert = true
         }
     }
 }

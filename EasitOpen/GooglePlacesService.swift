@@ -16,7 +16,7 @@ class GooglePlacesService {
     func searchPlaces(query: String) async throws -> [PlaceResult] {
         let searchURL = "\(baseURL):searchText"
         
-        guard var components = URLComponents(string: searchURL) else {
+        guard let components = URLComponents(string: searchURL) else {
             throw PlacesError.invalidURL
         }
         

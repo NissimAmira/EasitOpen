@@ -6,6 +6,52 @@ struct DashboardView: View {
     @Query private var businesses: [Business]
     @State private var showDeleteAlert = false
     @State private var businessToDelete: Business?
+    @State private var sortOption: SortOption = .name
+    @State private var filterOption: FilterOption = .all
+    @State private var searchText = ""
+
+    enum SortOption: String, CaseIterable {
+        case name = "Name"
+        case status = "Status"
+    }
+
+    enum FilterOption: String, CaseIterable {
+        case all = "All"
+        case open = "Open"
+        case closed = "Closed"
+    }
+    
+    private var filteredAndSortedBusinesses: [Business] {
+        var result = businesses
+        
+        // Filter by search text
+        if !searchText.isEmpty {
+            result = result.filter { business in
+                business.name.localizedCaseInsensitiveContains(searchText) ||
+                business.address.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+        
+        // Filter by open/closed
+        switch filterOption {
+        case .all:
+            break
+        case .open:
+            result = result.filter { $0.isOpen }
+        case .closed:
+            result = result.filter { !$0.isOpen }
+        }
+        
+        // Sort
+        switch sortOption {
+        case .name:
+            result.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .status:
+            result.sort { $0.isOpen && !$1.isOpen }
+        }
+        
+        return result
+    }
     
     var body: some View {
         NavigationStack {
@@ -26,76 +72,96 @@ struct DashboardView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                     
-                    // Temporary test button
-                    Button("Add Sample Business") {
-                        addSampleBusiness()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .padding(.top)
+                    Text("Tap the Search tab below to get started")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .padding(.top, 8)
                 }
             } else {
-                // List of businesses
-                List {
-                    ForEach(businesses) { business in
-                        NavigationLink(destination: BusinessDetailView(business: business)) {
-                            BusinessCardView(business: business)
+                VStack(spacing: 0) {
+                    // Filter and Sort controls
+                    HStack {
+                        // Filter picker
+                        Menu {
+                            Picker("Filter", selection: $filterOption) {
+                                ForEach(FilterOption.allCases, id: \.self) { option in
+                                    Text(option.rawValue).tag(option)
+                                }
+                            }
+                        } label: {
+                            Label(filterOption.rawValue, systemImage: "line.3.horizontal.decrease.circle")
+                                .font(.subheadline)
                         }
-                    }
-                    .onDelete(perform: promptDelete)
-                }
-                .alert("Remove Business", isPresented: $showDeleteAlert) {
-                    Button("Cancel", role: .cancel) { }
-                    Button("Remove", role: .destructive) {
-                        if let business = businessToDelete {
-                            modelContext.delete(business)
-                            businessToDelete = nil
+                        .buttonStyle(.bordered)
+                        
+                        // Sort picker
+                        Menu {
+                            Picker("Sort", selection: $sortOption) {
+                                ForEach(SortOption.allCases, id: \.self) { option in
+                                    Text(option.rawValue).tag(option)
+                                }
+                            }
+                        } label: {
+                            Label("Sort", systemImage: "arrow.up.arrow.down")
+                                .font(.subheadline)
                         }
+                        .buttonStyle(.bordered)
+                        
+                        Spacer()
+                        
+                        // Count badge
+                        Text("\(filteredAndSortedBusinesses.count) of \(businesses.count)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                } message: {
-                    if let business = businessToDelete {
-                        Text("Are you sure you want to remove \(business.name) from your dashboard?")
-                    }
-                }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Add Sample") {
-                            addSampleBusiness()
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    
+                    // List of businesses
+                    if filteredAndSortedBusinesses.isEmpty {
+                        VStack(spacing: 16) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.largeTitle)
+                                .foregroundColor(.gray)
+                            Text("No businesses match your filters")
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        List {
+                            ForEach(filteredAndSortedBusinesses) { business in
+                                NavigationLink(destination: BusinessDetailView(business: business)) {
+                                    BusinessCardView(business: business)
+                                }
+                            }
+                            .onDelete(perform: promptDelete)
                         }
                     }
                 }
             }
         }
         .navigationTitle("My Businesses")
-    }
-    
-    private func addSampleBusiness() {
-        // Create sample schedule (Monday-Friday, 9 AM - 6 PM)
-        let schedule = [
-            DaySchedule(weekday: 2, openTime: 540, closeTime: 1320),  // Monday
-            DaySchedule(weekday: 3, openTime: 540, closeTime: 1320),  // Tuesday
-            DaySchedule(weekday: 4, openTime: 540, closeTime: 1320),  // Wednesday
-            DaySchedule(weekday: 5, openTime: 540, closeTime: 1320),  // Thursday
-            DaySchedule(weekday: 6, openTime: 540, closeTime: 1320),  // Friday
-            DaySchedule(weekday: 7, openTime: 600, closeTime: 840, isClosed: false), // Saturday 10 AM - 2 PM
-            DaySchedule(weekday: 1, openTime: 0, closeTime: 0, isClosed: true)       // Sunday closed
-        ]
-        
-        let business = Business(
-            name: "Sample Coffee Shop",
-            address: "123 Main Street, Tel Aviv",
-            latitude: 32.0853,
-            longitude: 34.7818,
-            phoneNumber: "03-1234567",
-            website: "https://example.com",
-            openingHours: schedule
-        )
-        
-        modelContext.insert(business)
+        .searchable(text: $searchText, prompt: "Search businesses")
+        .alert("Remove Business", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                if let business = businessToDelete {
+                    modelContext.delete(business)
+                    businessToDelete = nil
+                }
+            }
+        } message: {
+            if let business = businessToDelete {
+                Text("Are you sure you want to remove \(business.name) from your dashboard?")
+            }
+        }
     }
     
     private func promptDelete(at offsets: IndexSet) {
         if let index = offsets.first {
-            businessToDelete = businesses[index]
+            // Find the actual business in the filtered list
+            let businessToRemove = filteredAndSortedBusinesses[index]
+            businessToDelete = businessToRemove
             showDeleteAlert = true
         }
     }

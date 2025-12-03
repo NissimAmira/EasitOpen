@@ -1,0 +1,7 @@
+import Foundation
+
+struct Config {
+    // Replace this with your actual Google Places API key
+    // Get your key from: https://console.cloud.google.com/
+    static let googlePlacesAPIKey = "YOUR_API_KEY_HERE"
+}

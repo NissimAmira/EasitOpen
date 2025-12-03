@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9F38CD452EE0BA0E00791EC5 /* EasitOpen */ = {
+		9F38CD5D2EE0BED700791EC5 /* EasitOpen */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = EasitOpen;
 			sourceTree = "<group>";
@@ -32,7 +32,7 @@
 		9F38CD3A2EE0BA0E00791EC5 = {
 			isa = PBXGroup;
 			children = (
-				9F38CD452EE0BA0E00791EC5 /* EasitOpen */,
+				9F38CD5D2EE0BED700791EC5 /* EasitOpen */,
 				9F38CD442EE0BA0E00791EC5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -61,7 +61,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				9F38CD452EE0BA0E00791EC5 /* EasitOpen */,
+				9F38CD5D2EE0BED700791EC5 /* EasitOpen */,
 			);
 			name = EasitOpen;
 			packageProductDependencies = (

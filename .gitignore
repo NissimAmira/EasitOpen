@@ -1,0 +1,20 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+*.xcworkspace/*
+!*.xcworkspace/xcshareddata/
+
+# Build
+build/
+DerivedData/
+
+# User-specific
+*.xcuserstate
+*.xcuserdatad/
+
+# macOS
+.DS_Store
+
+# Config (contains API keys)
+Config.swift

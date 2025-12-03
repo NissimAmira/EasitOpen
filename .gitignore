@@ -17,4 +17,5 @@ DerivedData/
 .DS_Store
 
 # Config (contains API keys)
-Config.swift
+**/config.swift
+**/Config.swift

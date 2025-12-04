@@ -24,13 +24,24 @@ struct SettingsView: View {
                             .font(.subheadline)
                     }
                     
-                    if notificationManager.authorizationStatus == .denied {
+                    if notificationManager.authorizationStatus == .authorized {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Notifications are enabled")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            Button("Change in iOS Settings") {
+                                openAppSettings()
+                            }
+                            .font(.subheadline)
+                        }
+                    } else if notificationManager.authorizationStatus == .denied {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Notifications are disabled")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             
-                            Button("Open Settings") {
+                            Button("Open iOS Settings") {
                                 openAppSettings()
                             }
                             .font(.subheadline)
@@ -48,10 +59,14 @@ struct SettingsView: View {
                     }
                     .disabled(notificationManager.authorizationStatus != .authorized)
                     
-                } header: {
+                }; header {
                     Text("Notifications")
-                } footer: {
-                    Text("Get notified when business hours change. Test notifications show what real change alerts look like.")
+                } footer {
+                    if notificationManager.authorizationStatus == .authorized {
+                        Text("Notifications are enabled. To disable, change settings in iOS Settings app.")
+                    } else {
+                        Text("Get notified when business hours change. Test notifications show what real change alerts look like.")
+                    }
                 }
                 
                 // Background Refresh Section

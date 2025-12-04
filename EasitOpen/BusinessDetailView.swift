@@ -18,6 +18,31 @@ struct BusinessDetailView: View {
     @State private var showDeleteAlert = false
     @State private var showEditLabel = false
     @State private var editingLabel: String = ""
+    @State private var isRefreshing = false
+    @State private var refreshMessage: String?
+    @State private var refreshMessageType: MessageType = .success
+    
+    enum MessageType {
+        case success, info, error
+        
+        var color: Color {
+            switch self {
+            case .success: return .green
+            case .info: return .blue
+            case .error: return .red
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .success: return "checkmark.circle.fill"
+            case .info: return "info.circle.fill"
+            case .error: return "exclamationmark.triangle.fill"
+            }
+        }
+    }
+    
+    private let refreshService = BusinessRefreshService()
     
     init(business: Business) {
         self.business = business
@@ -75,6 +100,22 @@ struct BusinessDetailView: View {
                     Text(business.address)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+                    
+                    // Last updated indicator with staleness badge
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.caption2)
+                        Text("Updated \(business.lastUpdatedText)")
+                            .font(.caption)
+                        
+                        // Staleness indicator dot
+                        if business.isDataStale {
+                            Circle()
+                                .fill(.orange)
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                    .foregroundColor(.secondary)
                 }
                 .padding(.horizontal)
                 
@@ -184,6 +225,39 @@ struct BusinessDetailView: View {
             .padding(.top)
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { Task { await refreshBusiness() } }) {
+                    if isRefreshing {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+                .disabled(isRefreshing)
+            }
+        }
+        .overlay(alignment: .top) {
+            if let message = refreshMessage {
+                HStack(spacing: 8) {
+                    Image(systemName: refreshMessageType.icon)
+                        .foregroundColor(refreshMessageType.color)
+                    Text(message)
+                        .font(.subheadline)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(refreshMessageType.color.opacity(0.15))
+                .background(.ultraThinMaterial)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(refreshMessageType.color.opacity(0.3), lineWidth: 1)
+                )
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
         .alert("Edit Label", isPresented: $showEditLabel) {
             TextField("Custom name", text: $editingLabel)
             Button("Cancel", role: .cancel) { }
@@ -233,6 +307,43 @@ struct BusinessDetailView: View {
     private func saveLabel() {
         let trimmed = editingLabel.trimmingCharacters(in: .whitespacesAndNewlines)
         business.customLabel = trimmed.isEmpty ? nil : trimmed
+    }
+    
+    @MainActor
+    private func refreshBusiness() async {
+        print("\n🔄 Manual refresh: \(business.displayName)")
+        isRefreshing = true
+        
+        do {
+            let hasChanges = try await refreshService.refreshBusiness(business)
+            isRefreshing = false
+            
+            if hasChanges {
+                showRefreshMessage("Hours updated", type: .success)
+                print("✅ Business hours were updated")
+            } else {
+                showRefreshMessage("Already up to date", type: .info)
+                print("✅ No changes detected")
+            }
+        } catch {
+            isRefreshing = false
+            showRefreshMessage("Failed to refresh", type: .error)
+            print("❌ Refresh error: \(error)")
+        }
+    }
+    
+    private func showRefreshMessage(_ message: String, type: MessageType) {
+        withAnimation {
+            refreshMessage = message
+            refreshMessageType = type
+        }
+        
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            withAnimation {
+                refreshMessage = nil
+            }
+        }
     }
     
     private func deleteBusiness() {

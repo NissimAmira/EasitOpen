@@ -11,6 +11,27 @@ struct DashboardView: View {
     @State private var searchText = ""
     @State private var isRefreshing = false
     @State private var refreshMessage: String?
+    @State private var refreshMessageType: MessageType = .success
+    
+    enum MessageType {
+        case success, info, warning
+        
+        var color: Color {
+            switch self {
+            case .success: return .green
+            case .info: return .blue
+            case .warning: return .orange
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .success: return "checkmark.circle.fill"
+            case .info: return "info.circle.fill"
+            case .warning: return "exclamationmark.triangle.fill"
+            }
+        }
+    }
     
     private let refreshService = BusinessRefreshService()
 
@@ -160,14 +181,23 @@ struct DashboardView: View {
         .searchable(text: $searchText, prompt: "Search businesses")
         .overlay(alignment: .top) {
             if let message = refreshMessage {
-                Text(message)
-                    .font(.subheadline)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(8)
-                    .padding(.top, 8)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                HStack(spacing: 8) {
+                    Image(systemName: refreshMessageType.icon)
+                        .foregroundColor(refreshMessageType.color)
+                    Text(message)
+                        .font(.subheadline)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(refreshMessageType.color.opacity(0.15))
+                .background(.ultraThinMaterial)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(refreshMessageType.color.opacity(0.3), lineWidth: 1)
+                )
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .alert("Remove Business", isPresented: $showDeleteAlert) {
@@ -221,17 +251,18 @@ struct DashboardView: View {
         
         // Show message to user
         if failureCount > 0 {
-            showRefreshMessage("Updated \(successCount) of \(businesses.count) businesses")
+            showRefreshMessage("Updated \(successCount) of \(businesses.count) businesses", type: .warning)
         } else if changesCount > 0 {
-            showRefreshMessage("✓ Updated \(changesCount) business(es) with new hours")
+            showRefreshMessage("Updated \(changesCount) business(es) with new hours", type: .success)
         } else {
-            showRefreshMessage("✓ All businesses are up to date")
+            showRefreshMessage("All businesses are up to date", type: .info)
         }
     }
     
-    private func showRefreshMessage(_ message: String) {
+    private func showRefreshMessage(_ message: String, type: MessageType) {
         withAnimation {
             refreshMessage = message
+            refreshMessageType = type
         }
         
         // Hide message after 3 seconds

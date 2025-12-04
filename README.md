@@ -12,6 +12,9 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Smart Filtering**: Filter by Open, Closing Soon, or Closed status
 - **Intelligent Sorting**: Sort businesses by name or status (Open → Closing Soon → Closed)
 - **Search**: Quickly find a specific business in your saved list
+- **Pull-to-Refresh**: Swipe down to update all business hours from Google Places
+- **Auto-Refresh**: Stale data (>24 hours) automatically updates on app launch
+- **Staleness Indicators**: Orange dot shows when data is >7 days old
 - **Easy Management**: Swipe to delete with confirmation prompt
 
 ### Search & Add
@@ -24,6 +27,8 @@ An iOS app to help you quickly check opening hours and current status of your fa
 
 ### Business Details
 - **Custom Labels**: Edit business names with a personal touch
+- **Manual Refresh**: Tap refresh button to update individual business hours instantly
+- **Last Updated Info**: See when data was last refreshed with staleness indicator
 - **Interactive Map**: See business location with MapKit integration
 - **Full Weekly Schedule**: View complete opening hours for every day
 - **Quick Actions**: 
@@ -32,6 +37,14 @@ An iOS app to help you quickly check opening hours and current status of your fa
   - Get directions in Apple Maps
 - **Today Highlight**: Current day is highlighted in the schedule
 - **Safe Deletion**: Confirmation dialog before removing businesses
+
+### Data Refresh System
+- **Multiple Refresh Methods**: Pull-to-refresh, auto-refresh, and manual per-business refresh
+- **Change Detection**: Automatically identifies when hours have been updated
+- **Smart Updates**: Only refreshes businesses with stale data (>24 hours)
+- **Visual Feedback**: Color-coded toast messages (green=success, blue=info, orange=warning)
+- **Rate Limiting**: 1-second delay between API requests to avoid rate limits
+- **Background Operation**: Refreshes don't block the UI
 
 ## 🛠 Technical Stack
 
@@ -100,7 +113,8 @@ EasitOpen/
 │   │   ├── SearchResultRow.swift   # Search result component
 │   │   └── BusinessDetailView.swift # Detailed business view
 │   ├── Services/
-│   │   └── GooglePlacesService.swift # Google Places API integration
+│   │   ├── GooglePlacesService.swift # Google Places API integration
+│   │   └── BusinessRefreshService.swift # Data refresh logic
 │   ├── EasitOpenApp.swift          # App entry point
 │   └── Config.swift.template       # API key configuration template
 ├── README.md
@@ -142,20 +156,29 @@ EasitOpen/
 
 ## 🎯 Completed Features
 
-- [x] Real-time open/closed/closing soon status
+- [x] Real-time open/closed/closing soon status (60-minute threshold)
 - [x] Custom business labels
 - [x] Comprehensive filtering and sorting
 - [x] Search with persistent results
 - [x] Visual feedback for added businesses
 - [x] Confirmation dialogs for deletions
 - [x] Full test suite coverage
+- [x] Pull-to-refresh on dashboard
+- [x] Auto-refresh on app launch (24-hour threshold)
+- [x] Manual refresh per business
+- [x] Data staleness indicators
+- [x] Change detection system
+- [x] Color-coded toast notifications
+- [x] Rate-limited API requests
 
 ## 🚧 Future Enhancements
 
+- [ ] Background refresh (when app is closed)
+- [ ] Push notifications when hours change
+- [ ] Notification settings (frequency, types)
 - [ ] Custom app icon
 - [ ] Launch screen
 - [ ] Favorites/priority businesses
-- [ ] Push notifications for closing time
 - [ ] Edit business hours manually
 - [ ] Location-based sorting by distance
 - [ ] Dark mode optimizations

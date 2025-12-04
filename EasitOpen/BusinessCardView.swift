@@ -44,6 +44,20 @@ struct BusinessCardView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    
+                    Spacer()
+                    
+                    // Staleness indicator
+                    if business.isDataStale {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(.orange)
+                                .frame(width: 6, height: 6)
+                            Text(business.lastUpdatedText)
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                        }
+                    }
                 }
             }
         }

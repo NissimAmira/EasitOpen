@@ -153,16 +153,19 @@ EasitOpen/
 ## 🧪 Testing
 
 ### Unit Tests
-- Comprehensive test suite with 27+ tests
+- Comprehensive test suite with 62+ tests across 4 test files
 - Run tests with Cmd+U in Xcode
 - Tests cover:
-  - Business model and status logic
+  - Business model and status logic (27 tests)
   - Custom label functionality
   - Opening hours calculations
   - Closing soon threshold (60 minutes)
   - Time formatting and edge cases
   - Data staleness detection
   - Timestamp tracking
+  - Notification system and BusinessChange types (15 tests)
+  - Refresh service time/day formatting (20 tests)
+  - RefreshResult and error handling
 
 ### On Simulator
 - Simply run from Xcode (Cmd+R)

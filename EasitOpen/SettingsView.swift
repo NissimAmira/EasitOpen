@@ -59,9 +59,9 @@ struct SettingsView: View {
                     }
                     .disabled(notificationManager.authorizationStatus != .authorized)
                     
-                }; header {
+                } header: {
                     Text("Notifications")
-                } footer {
+                } footer: {
                     if notificationManager.authorizationStatus == .authorized {
                         Text("Notifications are enabled. To disable, change settings in iOS Settings app.")
                     } else {

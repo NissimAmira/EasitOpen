@@ -134,15 +134,21 @@ struct BusinessDetailView: View {
                 .padding(.horizontal)
                 
                 // Action buttons
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     if let phone = business.phoneNumber {
                         Button(action: {
                             if let url = URL(string: "tel://\(phone.replacingOccurrences(of: " ", with: ""))") {
                                 UIApplication.shared.open(url)
                             }
                         }) {
-                            Label("Call", systemImage: "phone.fill")
-                                .frame(maxWidth: .infinity)
+                            VStack(spacing: 4) {
+                                Image(systemName: "phone.fill")
+                                    .font(.title3)
+                                Text("Call")
+                                    .font(.caption)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
                         }
                         .buttonStyle(.bordered)
                     }
@@ -153,15 +159,27 @@ struct BusinessDetailView: View {
                                 UIApplication.shared.open(url)
                             }
                         }) {
-                            Label("Website", systemImage: "safari.fill")
-                                .frame(maxWidth: .infinity)
+                            VStack(spacing: 4) {
+                                Image(systemName: "safari.fill")
+                                    .font(.title3)
+                                Text("Website")
+                                    .font(.caption)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
                         }
                         .buttonStyle(.bordered)
                     }
                     
                     Button(action: openInMaps) {
-                        Label("Directions", systemImage: "map.fill")
-                            .frame(maxWidth: .infinity)
+                        VStack(spacing: 4) {
+                            Image(systemName: "map.fill")
+                                .font(.title3)
+                            Text("Directions")
+                                .font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
                     }
                     .buttonStyle(.bordered)
                 }

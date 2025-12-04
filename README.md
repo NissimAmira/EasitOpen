@@ -31,10 +31,11 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Last Updated Info**: See when data was last refreshed with staleness indicator
 - **Interactive Map**: See business location with MapKit integration
 - **Full Weekly Schedule**: View complete opening hours for every day
-- **Quick Actions**: 
+- **Quick Actions**: Optimized vertical layout (icon + text)
   - Call the business directly
   - Open website in Safari
   - Get directions in Apple Maps
+  - All 3 buttons fit without text wrapping
 - **Today Highlight**: Current day is highlighted in the schedule
 - **Safe Deletion**: Confirmation dialog before removing businesses
 
@@ -204,7 +205,15 @@ EasitOpen/
 - [x] User-configurable refresh intervals (1-24 hours)
 - [x] Test notification feature
 
+## 📋 Documentation
+
+- **README.md** - Main project documentation (this file)
+- **BACKGROUND_REFRESH_SETUP.md** - Step-by-step guide for enabling background refresh
+- **PHASE_4_6_IMPLEMENTATION.md** - Technical details of notification and background refresh features
+- **DATA_MIGRATION_GUIDE.md** - Guide for handling SwiftData schema changes and migrations
+
 ## 🚧 Future Enhancements
+- [ ] Data export/import feature
 - [ ] Custom app icon
 - [ ] Launch screen
 - [ ] Favorites/priority businesses
@@ -240,6 +249,29 @@ This project is open source and available for learning purposes.
 ## 👤 Author
 
 Nissim Amira
+
+## 📝 Release Notes
+
+### Version 1.0.0 (Current)
+
+**Features:**
+- ✅ Complete business tracking system with real-time status
+- ✅ Background refresh with configurable intervals
+- ✅ Smart notifications for hours changes
+- ✅ Settings tab with full customization
+- ✅ 62+ unit tests with comprehensive coverage
+- ✅ Optimized UI layouts (vertical quick action buttons)
+- ✅ Data migration protection for future updates
+
+**Known Issues:**
+- Background refresh requires manual Xcode configuration (see BACKGROUND_REFRESH_SETUP.md)
+- Background tasks work best on physical devices, not simulators
+- First-time update to v1.0.0 required re-adding businesses (one-time occurrence)
+
+**Documentation:**
+- Complete setup guides
+- Data migration best practices
+- Background refresh testing instructions
 
 ---
 

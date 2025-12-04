@@ -5,10 +5,12 @@ An iOS app to help you quickly check opening hours and current status of your fa
 ## 📱 Features
 
 ### Dashboard
-- **Real-time Status**: See which businesses are currently open or closed at a glance
+- **Real-time Status**: See which businesses are currently open, closing soon, or closed at a glance
+- **Closing Soon Alert**: Orange badge appears when business closes within 30 minutes
+- **Custom Labels**: Personalize business names (e.g., "My Favorite Cafe")
 - **Today's Hours**: View opening hours for today on each business card
-- **Smart Filtering**: Filter by open/closed status
-- **Sorting**: Sort businesses by name or status
+- **Smart Filtering**: Filter by Open, Closing Soon, or Closed status
+- **Intelligent Sorting**: Sort businesses by name or status (Open → Closing Soon → Closed)
 - **Search**: Quickly find a specific business in your saved list
 - **Easy Management**: Swipe to delete with confirmation prompt
 
@@ -16,9 +18,12 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Google Places Integration**: Search for any business using Google Places API
 - **Comprehensive Results**: See business name, address, and current status
 - **One-Tap Add**: Add businesses to your dashboard with a single tap
+- **Visual Feedback**: Added businesses show a green checkmark
+- **Persistent Results**: Search results remain visible after adding a business
 - **Automatic Hours Import**: Opening hours are automatically fetched and saved
 
 ### Business Details
+- **Custom Labels**: Edit business names with a personal touch
 - **Interactive Map**: See business location with MapKit integration
 - **Full Weekly Schedule**: View complete opening hours for every day
 - **Quick Actions**: 
@@ -26,6 +31,7 @@ An iOS app to help you quickly check opening hours and current status of your fa
   - Open website in Safari
   - Get directions in Apple Maps
 - **Today Highlight**: Current day is highlighted in the schedule
+- **Safe Deletion**: Confirmation dialog before removing businesses
 
 ## 🛠 Technical Stack
 
@@ -34,7 +40,9 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Data Persistence**: SwiftData
 - **Maps**: MapKit
 - **API Integration**: Google Places API (New)
+- **Testing**: XCTest with comprehensive unit tests
 - **Minimum iOS Version**: iOS 17.0
+- **Architecture**: MVVM pattern with SwiftUI
 
 ## 🚀 Setup Instructions
 
@@ -108,6 +116,16 @@ EasitOpen/
 
 ## 🧪 Testing
 
+### Unit Tests
+- Comprehensive test suite with 20+ tests
+- Run tests with Cmd+U in Xcode
+- Tests cover:
+  - Business model and status logic
+  - Custom label functionality
+  - Opening hours calculations
+  - Closing soon threshold (30 minutes)
+  - Time formatting and edge cases
+
 ### On Simulator
 - Simply run from Xcode (Cmd+R)
 - All features work except actual phone calls
@@ -122,12 +140,22 @@ EasitOpen/
 - For longer-term testing and sharing with others
 - Requires Apple Developer account enrollment
 
-## 🎯 Future Enhancements
+## 🎯 Completed Features
+
+- [x] Real-time open/closed/closing soon status
+- [x] Custom business labels
+- [x] Comprehensive filtering and sorting
+- [x] Search with persistent results
+- [x] Visual feedback for added businesses
+- [x] Confirmation dialogs for deletions
+- [x] Full test suite coverage
+
+## 🚧 Future Enhancements
 
 - [ ] Custom app icon
 - [ ] Launch screen
 - [ ] Favorites/priority businesses
-- [ ] Notifications for closing time
+- [ ] Push notifications for closing time
 - [ ] Edit business hours manually
 - [ ] Location-based sorting by distance
 - [ ] Dark mode optimizations
@@ -137,12 +165,15 @@ EasitOpen/
 ## 📝 Learning Journey
 
 This is my first iOS app, built to learn:
-- SwiftUI fundamentals
+- SwiftUI fundamentals (views, state management, navigation)
 - SwiftData for persistence
-- API integration with URLSession
+- API integration with URLSession (async/await)
 - MapKit integration
 - MVVM architecture patterns
-- iOS app deployment
+- Unit testing with XCTest
+- Git workflow and version control
+- iOS app deployment and TestFlight
+- User experience design (status indicators, confirmation dialogs)
 
 ## 🤝 Contributing
 

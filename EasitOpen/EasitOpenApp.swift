@@ -10,6 +10,11 @@ import SwiftData
 
 @main
 struct EasitOpenApp: App {
+    init() {
+        // Register background tasks
+        BackgroundRefreshManager.shared.registerBackgroundTasks()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()

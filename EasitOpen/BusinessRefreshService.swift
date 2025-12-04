@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UserNotifications
 
 enum RefreshError: Error {
     case noPlaceId
@@ -11,14 +12,16 @@ struct RefreshResult {
     let business: Business
     let success: Bool
     let hasChanges: Bool
+    let changes: [BusinessChange]
     let error: Error?
 }
 
 class BusinessRefreshService {
     private let placesService = GooglePlacesService()
+    private let notificationManager = NotificationManager.shared
     
-    // Refresh a single business
-    func refreshBusiness(_ business: Business) async throws -> Bool {
+    // Refresh a single business and send notifications if changes detected
+    func refreshBusiness(_ business: Business) async throws -> [BusinessChange] {
         guard let placeId = business.googlePlaceId else {
             throw RefreshError.noPlaceId
         }
@@ -29,17 +32,19 @@ class BusinessRefreshService {
         // Fetch updated data from Google Places
         let updatedPlace = try await placesService.getPlaceDetails(placeId: placeId)
         
-        // Check if hours have changed
-        let hasChanges = detectChanges(business: business, newPlace: updatedPlace)
+        // Detect detailed changes
+        let changes = detectDetailedChanges(business: business, newPlace: updatedPlace)
         
-        if hasChanges {
+        if !changes.isEmpty {
             // Update business data
             updateBusiness(business, with: updatedPlace)
             business.lastUpdated = Date()
-            return true
+            
+            // Send notifications for changes
+            await notificationManager.sendChangeNotification(for: changes)
         }
         
-        return false
+        return changes
     }
     
     // Refresh all businesses with rate limiting
@@ -53,11 +58,12 @@ class BusinessRefreshService {
             }
             
             do {
-                let hasChanges = try await refreshBusiness(business)
+                let changes = try await refreshBusiness(business)
                 results.append(RefreshResult(
                     business: business,
                     success: true,
-                    hasChanges: hasChanges,
+                    hasChanges: !changes.isEmpty,
+                    changes: changes,
                     error: nil
                 ))
             } catch {
@@ -65,6 +71,7 @@ class BusinessRefreshService {
                     business: business,
                     success: false,
                     hasChanges: false,
+                    changes: [],
                     error: error
                 ))
             }
@@ -73,29 +80,83 @@ class BusinessRefreshService {
         return results
     }
     
-    // Detect if opening hours have changed
-    private func detectChanges(business: Business, newPlace: PlaceResult) -> Bool {
+    // Detect detailed changes between old and new business data
+    func detectDetailedChanges(business: Business, newPlace: PlaceResult) -> [BusinessChange] {
+        var changes: [BusinessChange] = []
+        let businessId = business.id.uuidString
+        let businessName = business.customLabel ?? business.name
+        
         let newSchedule = convertOpeningHours(newPlace.currentOpeningHours)
         
-        // Simple comparison: check if schedule count changed
-        if business.openingHours.count != newSchedule.count {
-            return true
-        }
-        
-        // Compare each day's hours
+        // Compare opening hours for each day
         for newDay in newSchedule {
             if let existingDay = business.openingHours.first(where: { $0.weekday == newDay.weekday }) {
-                if existingDay.openTime != newDay.openTime ||
-                   existingDay.closeTime != newDay.closeTime ||
-                   existingDay.isClosed != newDay.isClosed {
-                    return true
+                // Day exists in both - check if hours changed
+                if existingDay.isClosed != newDay.isClosed {
+                    if newDay.isClosed {
+                        changes.append(BusinessChange(
+                            type: .dayClosed(day: dayName(for: newDay.weekday)),
+                            businessName: businessName,
+                            businessId: businessId
+                        ))
+                    } else {
+                        let hours = "\(formatTime(newDay.openTime)) - \(formatTime(newDay.closeTime))"
+                        changes.append(BusinessChange(
+                            type: .dayOpened(day: dayName(for: newDay.weekday), hours: hours),
+                            businessName: businessName,
+                            businessId: businessId
+                        ))
+                    }
+                } else if existingDay.openTime != newDay.openTime || existingDay.closeTime != newDay.closeTime {
+                    let oldHours = "\(formatTime(existingDay.openTime)) - \(formatTime(existingDay.closeTime))"
+                    let newHours = "\(formatTime(newDay.openTime)) - \(formatTime(newDay.closeTime))"
+                    changes.append(BusinessChange(
+                        type: .hoursChanged(day: dayName(for: newDay.weekday), oldHours: oldHours, newHours: newHours),
+                        businessName: businessName,
+                        businessId: businessId
+                    ))
                 }
             } else {
-                return true // New day added
+                // New day added
+                let hours = "\(formatTime(newDay.openTime)) - \(formatTime(newDay.closeTime))"
+                changes.append(BusinessChange(
+                    type: .dayOpened(day: dayName(for: newDay.weekday), hours: hours),
+                    businessName: businessName,
+                    businessId: businessId
+                ))
             }
         }
         
-        return false
+        // Check for days that were removed
+        for existingDay in business.openingHours {
+            if !newSchedule.contains(where: { $0.weekday == existingDay.weekday }) {
+                changes.append(BusinessChange(
+                    type: .dayClosed(day: dayName(for: existingDay.weekday)),
+                    businessName: businessName,
+                    businessId: businessId
+                ))
+            }
+        }
+        
+        // Check phone number changes
+        if business.phoneNumber != newPlace.internationalPhoneNumber {
+            changes.append(BusinessChange(
+                type: .phoneChanged(old: business.phoneNumber, new: newPlace.internationalPhoneNumber),
+                businessName: businessName,
+                businessId: businessId
+            ))
+        }
+        
+        // Check website changes
+        if business.website != newPlace.websiteUri {
+            changes.append(BusinessChange(
+                type: .websiteChanged(old: business.website, new: newPlace.websiteUri),
+                businessName: businessName,
+                businessId: businessId
+            ))
+        }
+        
+        return changes
     }
     
     // Update business with new data
@@ -142,5 +203,21 @@ class BusinessRefreshService {
         }
         
         return schedules
+    }
+    
+    // Helper: Format time in minutes to readable string (e.g., "9:30 AM")
+    private func formatTime(_ minutes: Int) -> String {
+        let hour = minutes / 60
+        let minute = minutes % 60
+        let period = hour < 12 ? "AM" : "PM"
+        let displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour)
+        return String(format: "%d:%02d %@", displayHour, minute, period)
+    }
+    
+    // Helper: Convert weekday number to day name
+    private func dayName(for weekday: Int) -> String {
+        let days = ["", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        guard weekday >= 1 && weekday <= 7 else { return "Unknown" }
+        return days[weekday]
     }
 }

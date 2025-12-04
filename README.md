@@ -39,8 +39,11 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Safe Deletion**: Confirmation dialog before removing businesses
 
 ### Data Refresh System
-- **Multiple Refresh Methods**: Pull-to-refresh, auto-refresh, and manual per-business refresh
+- **Multiple Refresh Methods**: Pull-to-refresh, auto-refresh, manual per-business, and background refresh
+- **Background Refresh**: Automatically updates business hours even when app is closed (every 8 hours)
 - **Change Detection**: Automatically identifies when hours have been updated
+- **Smart Notifications**: Receive alerts when business hours change (requires permission)
+- **Detailed Change Tracking**: Know exactly what changed (hours, closures, phone, website)
 - **Smart Updates**: Only refreshes businesses with stale data (>24 hours)
 - **Visual Feedback**: Color-coded toast messages (green=success, blue=info, orange=warning)
 - **Rate Limiting**: 1-second delay between API requests to avoid rate limits
@@ -53,6 +56,8 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Data Persistence**: SwiftData
 - **Maps**: MapKit
 - **API Integration**: Google Places API (New)
+- **Background Tasks**: BGTaskScheduler for background refresh
+- **Notifications**: UserNotifications framework for change alerts
 - **Testing**: XCTest with comprehensive unit tests
 - **Minimum iOS Version**: iOS 17.0
 - **Architecture**: MVVM pattern with SwiftUI
@@ -92,10 +97,16 @@ An iOS app to help you quickly check opening hours and current status of your fa
    open EasitOpen.xcodeproj
    ```
 
-5. **Build and Run:**
+5. **Enable Background Refresh (Required):**
+   - Follow instructions in `BACKGROUND_REFRESH_SETUP.md`
+   - Add Background Modes capability
+   - Register background task identifier in Info.plist
+
+6. **Build and Run:**
    - Select your target device or simulator
    - Press Cmd+R or click the Play button
    - For physical devices: You may need to trust your developer account in Settings
+   - **Note**: Background refresh works best on physical devices, not simulators
 
 ## 📂 Project Structure
 
@@ -113,8 +124,10 @@ EasitOpen/
 │   │   ├── SearchResultRow.swift   # Search result component
 │   │   └── BusinessDetailView.swift # Detailed business view
 │   ├── Services/
-│   │   ├── GooglePlacesService.swift # Google Places API integration
-│   │   └── BusinessRefreshService.swift # Data refresh logic
+│   │   ├── GooglePlacesService.swift      # Google Places API integration
+│   │   ├── BusinessRefreshService.swift   # Data refresh logic
+│   │   ├── NotificationManager.swift      # Local notification handling
+│   │   └── BackgroundRefreshManager.swift # Background task scheduling
 │   ├── EasitOpenApp.swift          # App entry point
 │   └── Config.swift.template       # API key configuration template
 ├── README.md
@@ -131,7 +144,7 @@ EasitOpen/
 ## 🧪 Testing
 
 ### Unit Tests
-- Comprehensive test suite with 20+ tests
+- Comprehensive test suite with 27+ tests
 - Run tests with Cmd+U in Xcode
 - Tests cover:
   - Business model and status logic
@@ -139,6 +152,8 @@ EasitOpen/
   - Opening hours calculations
   - Closing soon threshold (60 minutes)
   - Time formatting and edge cases
+  - Data staleness detection
+  - Timestamp tracking
 
 ### On Simulator
 - Simply run from Xcode (Cmd+R)
@@ -170,12 +185,14 @@ EasitOpen/
 - [x] Change detection system
 - [x] Color-coded toast notifications
 - [x] Rate-limited API requests
+- [x] Background refresh (when app is closed)
+- [x] Push notifications when hours change
+- [x] Detailed change tracking (hours, closures, contact info)
 
 ## 🚧 Future Enhancements
 
-- [ ] Background refresh (when app is closed)
-- [ ] Push notifications when hours change
-- [ ] Notification settings (frequency, types)
+- [ ] Notification settings UI (frequency, types)
+- [ ] User-configurable refresh intervals
 - [ ] Custom app icon
 - [ ] Launch screen
 - [ ] Favorites/priority businesses
@@ -192,11 +209,13 @@ This is my first iOS app, built to learn:
 - SwiftData for persistence
 - API integration with URLSession (async/await)
 - MapKit integration
+- Background task scheduling with BGTaskScheduler
+- Local notifications with UserNotifications
 - MVVM architecture patterns
 - Unit testing with XCTest
 - Git workflow and version control
 - iOS app deployment and TestFlight
-- User experience design (status indicators, confirmation dialogs)
+- User experience design (status indicators, confirmation dialogs, notifications)
 
 ## 🤝 Contributing
 

@@ -12,8 +12,11 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var businesses: [Business]
     @State private var hasCheckedForRefresh = false
+    @State private var hasRequestedNotifications = false
     
     private let refreshService = BusinessRefreshService()
+    private let notificationManager = NotificationManager.shared
+    private let backgroundRefreshManager = BackgroundRefreshManager.shared
     
     var body: some View {
         TabView {
@@ -28,11 +31,29 @@ struct ContentView: View {
                 }
         }
         .task {
+            // Request notification permissions on first launch
+            if !hasRequestedNotifications {
+                hasRequestedNotifications = true
+                await requestNotificationPermissions()
+            }
+            
             // Only check once per app launch
             if !hasCheckedForRefresh {
                 hasCheckedForRefresh = true
                 await checkAndRefreshStaleData()
+                
+                // Schedule background refresh
+                backgroundRefreshManager.scheduleBackgroundRefresh()
             }
+        }
+    }
+    
+    private func requestNotificationPermissions() async {
+        let granted = await notificationManager.requestPermission()
+        if granted {
+            print("✅ Notification permissions granted")
+        } else {
+            print("⚠️ Notification permissions denied")
         }
     }
     

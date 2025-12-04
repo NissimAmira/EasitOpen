@@ -21,9 +21,22 @@
 		9F38CD912EE1E5BA00791EC5 /* EasitOpenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EasitOpenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9F38CDA52EE2133800791EC5 /* Exceptions for "EasitOpen" folder in "EasitOpen" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9F38CD422EE0BA0E00791EC5 /* EasitOpen */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9F38CD5D2EE0BED700791EC5 /* EasitOpen */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9F38CDA52EE2133800791EC5 /* Exceptions for "EasitOpen" folder in "EasitOpen" target */,
+			);
 			path = EasitOpen;
 			sourceTree = "<group>";
 		};
@@ -331,6 +344,8 @@
 				DEVELOPMENT_TEAM = QW5ZK426LR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EasitOpen/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -363,6 +378,8 @@
 				DEVELOPMENT_TEAM = QW5ZK426LR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EasitOpen/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

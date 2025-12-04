@@ -315,12 +315,12 @@ struct BusinessDetailView: View {
         isRefreshing = true
         
         do {
-            let hasChanges = try await refreshService.refreshBusiness(business)
+            let changes = try await refreshService.refreshBusiness(business)
             isRefreshing = false
             
-            if hasChanges {
-                showRefreshMessage("Hours updated", type: .success)
-                print("✅ Business hours were updated")
+            if !changes.isEmpty {
+                showRefreshMessage("Hours updated (\(changes.count) change\(changes.count == 1 ? "" : "s"))", type: .success)
+                print("✅ Business hours were updated with \(changes.count) changes")
             } else {
                 showRefreshMessage("Already up to date", type: .info)
                 print("✅ No changes detected")

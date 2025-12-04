@@ -9,6 +9,10 @@ struct DashboardView: View {
     @State private var sortOption: SortOption = .name
     @State private var filterOption: FilterOption = .all
     @State private var searchText = ""
+    @State private var isRefreshing = false
+    @State private var refreshMessage: String?
+    
+    private let refreshService = BusinessRefreshService()
 
     enum SortOption: String, CaseIterable {
         case name = "Name"
@@ -63,6 +67,7 @@ struct DashboardView: View {
     
     var body: some View {
         NavigationStack {
+            let _ = print("Dashboard: Found \(businesses.count) businesses")
             if businesses.isEmpty {
                 // Empty state - no businesses saved yet
                 VStack(spacing: 20) {
@@ -144,12 +149,27 @@ struct DashboardView: View {
                             }
                             .onDelete(perform: promptDelete)
                         }
+                        .refreshable {
+                            await refreshAllBusinesses()
+                        }
                     }
                 }
             }
         }
         .navigationTitle("My Businesses")
         .searchable(text: $searchText, prompt: "Search businesses")
+        .overlay(alignment: .top) {
+            if let message = refreshMessage {
+                Text(message)
+                    .font(.subheadline)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(8)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
         .alert("Remove Business", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Remove", role: .destructive) {
@@ -179,6 +199,47 @@ struct DashboardView: View {
             let businessToRemove = filteredAndSortedBusinesses[index]
             businessToDelete = businessToRemove
             showDeleteAlert = true
+        }
+    }
+    
+    @MainActor
+    private func refreshAllBusinesses() async {
+        print("\n🔄 Starting refresh of \(businesses.count) businesses...")
+        
+        isRefreshing = true
+        
+        let results = await refreshService.refreshAllBusinesses(businesses)
+        
+        isRefreshing = false
+        
+        // Count successes and changes
+        let successCount = results.filter { $0.success }.count
+        let changesCount = results.filter { $0.hasChanges }.count
+        let failureCount = results.filter { !$0.success }.count
+        
+        print("✅ Refresh complete: \(successCount) succeeded, \(changesCount) had changes, \(failureCount) failed")
+        
+        // Show message to user
+        if failureCount > 0 {
+            showRefreshMessage("Updated \(successCount) of \(businesses.count) businesses")
+        } else if changesCount > 0 {
+            showRefreshMessage("✓ Updated \(changesCount) business(es) with new hours")
+        } else {
+            showRefreshMessage("✓ All businesses are up to date")
+        }
+    }
+    
+    private func showRefreshMessage(_ message: String) {
+        withAnimation {
+            refreshMessage = message
+        }
+        
+        // Hide message after 3 seconds
+        Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            withAnimation {
+                refreshMessage = nil
+            }
         }
     }
 }

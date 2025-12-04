@@ -44,6 +44,31 @@ class GooglePlacesService {
         let result = try decoder.decode(PlacesSearchResponse.self, from: data)
         return result.places ?? []
     }
+    
+    // Get details for a specific place by ID (for refreshing)
+    func getPlaceDetails(placeId: String) async throws -> PlaceResult {
+        let detailsURL = "\(baseURL)/\(placeId)"
+        
+        guard var components = URLComponents(string: detailsURL) else {
+            throw PlacesError.invalidURL
+        }
+        
+        var request = URLRequest(url: components.url!)
+        request.httpMethod = "GET"
+        request.setValue(apiKey, forHTTPHeaderField: "X-Goog-Api-Key")
+        request.setValue("id,displayName,formattedAddress,location,currentOpeningHours,internationalPhoneNumber,websiteUri", forHTTPHeaderField: "X-Goog-FieldMask")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw PlacesError.invalidResponse
+        }
+        
+        let decoder = JSONDecoder()
+        let place = try decoder.decode(PlaceResult.self, from: data)
+        return place
+    }
 }
 
 // Error types

@@ -6,7 +6,7 @@ An iOS app to help you quickly check opening hours and current status of your fa
 
 ### Dashboard
 - **Real-time Status**: See which businesses are currently open, closing soon, or closed at a glance
-- **Closing Soon Alert**: Orange badge appears when business closes within 30 minutes
+- **Closing Soon Alert**: Orange badge appears when business closes within 60 minutes
 - **Custom Labels**: Personalize business names (e.g., "My Favorite Cafe")
 - **Today's Hours**: View opening hours for today on each business card
 - **Smart Filtering**: Filter by Open, Closing Soon, or Closed status
@@ -123,7 +123,7 @@ EasitOpen/
   - Business model and status logic
   - Custom label functionality
   - Opening hours calculations
-  - Closing soon threshold (30 minutes)
+  - Closing soon threshold (60 minutes)
   - Time formatting and edge cases
 
 ### On Simulator

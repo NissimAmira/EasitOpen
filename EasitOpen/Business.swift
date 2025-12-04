@@ -27,6 +27,7 @@ enum BusinessStatus {
 @Model
 class Business: Identifiable {
     var id: UUID
+    var googlePlaceId: String? // For fetching updates from Google
     var name: String
     var customLabel: String? // Custom name set by user
     var address: String
@@ -36,6 +37,8 @@ class Business: Identifiable {
     var website: String?
     var openingHours: [DaySchedule]
     var dateAdded: Date
+    var lastUpdated: Date // When data was last refreshed
+    var lastChecked: Date? // Last time we tried to check for updates
     
     // Display name (custom label if set, otherwise business name)
     var displayName: String {
@@ -44,6 +47,7 @@ class Business: Identifiable {
     
     init(
         id: UUID = UUID(),
+        googlePlaceId: String? = nil,
         name: String,
         address: String,
         latitude: Double,
@@ -53,6 +57,7 @@ class Business: Identifiable {
         openingHours: [DaySchedule] = []
     ) {
         self.id = id
+        self.googlePlaceId = googlePlaceId
         self.name = name
         self.address = address
         self.latitude = latitude
@@ -61,6 +66,8 @@ class Business: Identifiable {
         self.website = website
         self.openingHours = openingHours
         self.dateAdded = Date()
+        self.lastUpdated = Date()
+        self.lastChecked = nil
     }
     
     // Computed property to get current business status
@@ -82,9 +89,9 @@ class Business: Identifiable {
             return .closed
         }
         
-        // Check if closing soon (within 30 minutes)
+        // Check if closing soon (within 60 minutes)
         let minutesUntilClose = todaySchedule.closeTime - currentMinutes
-        if minutesUntilClose <= 30 && minutesUntilClose > 0 {
+        if minutesUntilClose <= 60 && minutesUntilClose > 0 {
             return .closingSoon
         }
         
@@ -94,5 +101,18 @@ class Business: Identifiable {
     // Computed property to check if business is currently open (for backward compatibility)
     var isOpen: Bool {
         status == .open || status == .closingSoon
+    }
+    
+    // Helper to check if data is stale (>7 days old)
+    var isDataStale: Bool {
+        let daysSinceUpdate = Calendar.current.dateComponents([.day], from: lastUpdated, to: Date()).day ?? 0
+        return daysSinceUpdate > 7
+    }
+    
+    // Human-readable last updated text
+    var lastUpdatedText: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: lastUpdated, relativeTo: Date())
     }
 }

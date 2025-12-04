@@ -101,10 +101,15 @@ struct SearchView: View {
     }
     
     private func addBusiness(_ place: PlaceResult) {
+        print("Adding business: \(place.name)")
+        print("Place ID: \(place.id)")
+        
         // Convert Google Place to our Business model
         let schedule = convertOpeningHours(place.currentOpeningHours)
+        print("Converted \(schedule.count) schedule entries")
         
         let business = Business(
+            googlePlaceId: place.id, // Save Google Place ID for refreshing
             name: place.name,
             address: place.address,
             latitude: place.location?.latitude ?? 0,
@@ -114,10 +119,19 @@ struct SearchView: View {
             openingHours: schedule
         )
         
-        modelContext.insert(business)
+        print("Created business object")
         
-        // Mark as added (visual feedback)
-        addedBusinessIds.insert(place.id)
+        do {
+            modelContext.insert(business)
+            try modelContext.save()
+            print("Successfully saved business to database")
+            
+            // Mark as added (visual feedback)
+            addedBusinessIds.insert(place.id)
+        } catch {
+            print("Error saving business: \(error)")
+            errorMessage = "Failed to add business. Please try again."
+        }
     }
     
     private func convertOpeningHours(_ hours: OpeningHours?) -> [DaySchedule] {

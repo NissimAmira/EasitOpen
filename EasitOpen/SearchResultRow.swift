@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SearchResultRow: View {
     let place: PlaceResult
+    let isAdded: Bool
     let onAdd: () -> Void
     
     var body: some View {
@@ -31,12 +32,23 @@ struct SearchResultRow: View {
             
             Spacer()
             
-            Button(action: onAdd) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(.blue)
+            if isAdded {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.green)
+                    Text("Added")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                }
+            } else {
+                Button(action: onAdd) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(.vertical, 4)
     }

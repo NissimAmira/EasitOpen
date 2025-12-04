@@ -14,6 +14,7 @@ struct SearchView: View {
     @State private var searchResults: [PlaceResult] = []
     @State private var isSearching = false
     @State private var errorMessage: String?
+    @State private var addedBusinessIds: Set<String> = []
     
     private let placesService = GooglePlacesService()
     
@@ -58,7 +59,10 @@ struct SearchView: View {
                     .padding()
                 } else {
                     List(searchResults) { place in
-                        SearchResultRow(place: place) {
+                        SearchResultRow(
+                            place: place,
+                            isAdded: addedBusinessIds.contains(place.id)
+                        ) {
                             addBusiness(place)
                         }
                     }
@@ -112,9 +116,8 @@ struct SearchView: View {
         
         modelContext.insert(business)
         
-        // Clear search and show confirmation
-        searchText = ""
-        searchResults = []
+        // Mark as added (visual feedback)
+        addedBusinessIds.insert(place.id)
     }
     
     private func convertOpeningHours(_ hours: OpeningHours?) -> [DaySchedule] {

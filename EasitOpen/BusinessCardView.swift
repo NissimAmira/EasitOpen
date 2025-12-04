@@ -7,18 +7,18 @@ struct BusinessCardView: View {
         VStack(alignment: .leading, spacing: 8) {
             // Business name and status badge
             HStack {
-                Text(business.name)
+                Text(business.displayName)
                     .font(.headline)
                 
                 Spacer()
                 
-                // Open/Closed badge
-                Text(business.isOpen ? "OPEN" : "CLOSED")
+                // Status badge
+                Text(business.status.text)
                     .font(.caption)
                     .fontWeight(.bold)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(business.isOpen ? Color.green : Color.red)
+                    .background(business.status.color)
                     .foregroundColor(.white)
                     .cornerRadius(8)
             }

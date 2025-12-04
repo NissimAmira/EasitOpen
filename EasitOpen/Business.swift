@@ -1,10 +1,34 @@
 import Foundation
 import SwiftData
+import SwiftUI
+
+enum BusinessStatus {
+    case open
+    case closingSoon
+    case closed
+    
+    var text: String {
+        switch self {
+        case .open: return "OPEN"
+        case .closingSoon: return "CLOSING SOON"
+        case .closed: return "CLOSED"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .open: return .green
+        case .closingSoon: return .orange
+        case .closed: return .red
+        }
+    }
+}
 
 @Model
 class Business: Identifiable {
     var id: UUID
     var name: String
+    var customLabel: String? // Custom name set by user
     var address: String
     var latitude: Double
     var longitude: Double
@@ -12,6 +36,11 @@ class Business: Identifiable {
     var website: String?
     var openingHours: [DaySchedule]
     var dateAdded: Date
+    
+    // Display name (custom label if set, otherwise business name)
+    var displayName: String {
+        customLabel ?? name
+    }
     
     init(
         id: UUID = UUID(),
@@ -34,8 +63,8 @@ class Business: Identifiable {
         self.dateAdded = Date()
     }
     
-    // Computed property to check if business is currently open
-    var isOpen: Bool {
+    // Computed property to get current business status
+    var status: BusinessStatus {
         let now = Date()
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: now)
@@ -45,9 +74,25 @@ class Business: Identifiable {
         
         // Find today's schedule
         guard let todaySchedule = openingHours.first(where: { $0.weekday == weekday }) else {
-            return false
+            return .closed
         }
         
-        return todaySchedule.isOpen(at: currentMinutes)
+        // Check if closed
+        if !todaySchedule.isOpen(at: currentMinutes) {
+            return .closed
+        }
+        
+        // Check if closing soon (within 30 minutes)
+        let minutesUntilClose = todaySchedule.closeTime - currentMinutes
+        if minutesUntilClose <= 30 && minutesUntilClose > 0 {
+            return .closingSoon
+        }
+        
+        return .open
+    }
+    
+    // Computed property to check if business is currently open (for backward compatibility)
+    var isOpen: Bool {
+        status == .open || status == .closingSoon
     }
 }

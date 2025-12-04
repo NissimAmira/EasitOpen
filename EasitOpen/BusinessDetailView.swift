@@ -16,6 +16,8 @@ struct BusinessDetailView: View {
     
     @State private var region: MKCoordinateRegion
     @State private var showDeleteAlert = false
+    @State private var showEditLabel = false
+    @State private var editingLabel: String = ""
     
     init(business: Business) {
         self.business = business
@@ -34,19 +36,38 @@ struct BusinessDetailView: View {
                 // Header with status
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(business.name)
-                            .font(.title)
-                            .fontWeight(.bold)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(business.displayName)
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                
+                                Button(action: {
+                                    editingLabel = business.customLabel ?? business.name
+                                    showEditLabel = true
+                                }) {
+                                    Image(systemName: "pencil.circle.fill")
+                                        .font(.title3)
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            
+                            if business.customLabel != nil {
+                                Text(business.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                         
                         Spacer()
                         
                         // Status badge
-                        Text(business.isOpen ? "OPEN" : "CLOSED")
+                        Text(business.status.text)
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(business.isOpen ? Color.green : Color.red)
+                            .background(business.status.color)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
@@ -163,6 +184,20 @@ struct BusinessDetailView: View {
             .padding(.top)
         }
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Edit Label", isPresented: $showEditLabel) {
+            TextField("Custom name", text: $editingLabel)
+            Button("Cancel", role: .cancel) { }
+            Button("Save") {
+                saveLabel()
+            }
+            if business.customLabel != nil {
+                Button("Clear", role: .destructive) {
+                    business.customLabel = nil
+                }
+            }
+        } message: {
+            Text("Give this business a custom name (e.g., \"My Favorite Cafe\")")
+        }
     }
     
     private func sortedSchedule() -> [DaySchedule] {
@@ -193,6 +228,11 @@ struct BusinessDetailView: View {
         mapItem.openInMaps(launchOptions: [
             MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
         ])
+    }
+    
+    private func saveLabel() {
+        let trimmed = editingLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+        business.customLabel = trimmed.isEmpty ? nil : trimmed
     }
     
     private func deleteBusiness() {

@@ -18,6 +18,7 @@ struct DashboardView: View {
     enum FilterOption: String, CaseIterable {
         case all = "All"
         case open = "Open"
+        case closingSoon = "Closing Soon"
         case closed = "Closed"
     }
     
@@ -32,14 +33,16 @@ struct DashboardView: View {
             }
         }
         
-        // Filter by open/closed
+        // Filter by status
         switch filterOption {
         case .all:
             break
         case .open:
-            result = result.filter { $0.isOpen }
+            result = result.filter { $0.status == .open }
+        case .closingSoon:
+            result = result.filter { $0.status == .closingSoon }
         case .closed:
-            result = result.filter { !$0.isOpen }
+            result = result.filter { $0.status == .closed }
         }
         
         // Sort
@@ -47,7 +50,12 @@ struct DashboardView: View {
         case .name:
             result.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         case .status:
-            result.sort { $0.isOpen && !$1.isOpen }
+            // Sort by status priority: open, closingSoon, closed
+            result.sort { business1, business2 in
+                let priority1 = statusPriority(business1.status)
+                let priority2 = statusPriority(business2.status)
+                return priority1 < priority2
+            }
         }
         
         return result
@@ -154,6 +162,14 @@ struct DashboardView: View {
             if let business = businessToDelete {
                 Text("Are you sure you want to remove \(business.name) from your dashboard?")
             }
+        }
+    }
+    
+    private func statusPriority(_ status: BusinessStatus) -> Int {
+        switch status {
+        case .open: return 0
+        case .closingSoon: return 1
+        case .closed: return 2
         }
     }
     

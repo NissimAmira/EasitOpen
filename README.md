@@ -238,9 +238,25 @@ This is my first iOS app, built to learn:
 - iOS app deployment and TestFlight
 - User experience design (status indicators, confirmation dialogs, notifications)
 
+## 📋 Documentation
+
+For developers who want to understand or contribute to the codebase:
+
+- **README.md** (this file) - Project overview, features, setup instructions
+- **BACKGROUND_REFRESH_SETUP.md** - Xcode configuration for BGTaskScheduler
+- **PHASE_4_6_IMPLEMENTATION.md** - Technical implementation details
+- **DATA_MIGRATION_GUIDE.md** - SwiftData migration patterns and best practices
+- **CONTRIBUTING.md** - Guidelines for contributing code and reporting issues
+
 ## 🤝 Contributing
 
-This is a personal learning project, but feedback and suggestions are welcome!
+This is a personal learning project, but contributions are welcome!
+
+Interested in contributing?
+- Report bugs or suggest features via [Issues](https://github.com/NissimAmira/EasitOpen/issues)
+- Fork the repo and submit Pull Requests
+- Follow existing code style and add tests for new features
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines
 
 ## 📄 License
 

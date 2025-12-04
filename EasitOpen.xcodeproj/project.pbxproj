@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		9F38CD952EE1E5BA00791EC5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9F38CD3B2EE0BA0E00791EC5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9F38CD422EE0BA0E00791EC5;
+			remoteInfo = EasitOpen;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		9F38CD432EE0BA0E00791EC5 /* EasitOpen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EasitOpen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F38CD912EE1E5BA00791EC5 /* EasitOpenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EasitOpenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = EasitOpen;
 			sourceTree = "<group>";
 		};
+		9F38CD922EE1E5BA00791EC5 /* EasitOpenTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EasitOpenTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		9F38CD402EE0BA0E00791EC5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9F38CD8E2EE1E5BA00791EC5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				9F38CD5D2EE0BED700791EC5 /* EasitOpen */,
+				9F38CD922EE1E5BA00791EC5 /* EasitOpenTests */,
 				9F38CD442EE0BA0E00791EC5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				9F38CD432EE0BA0E00791EC5 /* EasitOpen.app */,
+				9F38CD912EE1E5BA00791EC5 /* EasitOpenTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 9F38CD432EE0BA0E00791EC5 /* EasitOpen.app */;
 			productType = "com.apple.product-type.application";
 		};
+		9F38CD902EE1E5BA00791EC5 /* EasitOpenTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9F38CD992EE1E5BA00791EC5 /* Build configuration list for PBXNativeTarget "EasitOpenTests" */;
+			buildPhases = (
+				9F38CD8D2EE1E5BA00791EC5 /* Sources */,
+				9F38CD8E2EE1E5BA00791EC5 /* Frameworks */,
+				9F38CD8F2EE1E5BA00791EC5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9F38CD962EE1E5BA00791EC5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9F38CD922EE1E5BA00791EC5 /* EasitOpenTests */,
+			);
+			name = EasitOpenTests;
+			packageProductDependencies = (
+			);
+			productName = EasitOpenTests;
+			productReference = 9F38CD912EE1E5BA00791EC5 /* EasitOpenTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					9F38CD422EE0BA0E00791EC5 = {
 						CreatedOnToolsVersion = 26.1.1;
+					};
+					9F38CD902EE1E5BA00791EC5 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 9F38CD422EE0BA0E00791EC5;
 					};
 				};
 			};
@@ -100,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				9F38CD422EE0BA0E00791EC5 /* EasitOpen */,
+				9F38CD902EE1E5BA00791EC5 /* EasitOpenTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		9F38CD412EE0BA0E00791EC5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9F38CD8F2EE1E5BA00791EC5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9F38CD8D2EE1E5BA00791EC5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9F38CD962EE1E5BA00791EC5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9F38CD422EE0BA0E00791EC5 /* EasitOpen */;
+			targetProxy = 9F38CD952EE1E5BA00791EC5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		9F38CD4C2EE0BA0E00791EC5 /* Debug */ = {
@@ -310,6 +385,48 @@
 			};
 			name = Release;
 		};
+		9F38CD972EE1E5BA00791EC5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QW5ZK426LR;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Niss.EasitOpenTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EasitOpen.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EasitOpen";
+			};
+			name = Debug;
+		};
+		9F38CD982EE1E5BA00791EC5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QW5ZK426LR;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Niss.EasitOpenTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EasitOpen.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EasitOpen";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -327,6 +444,15 @@
 			buildConfigurations = (
 				9F38CD4F2EE0BA0E00791EC5 /* Debug */,
 				9F38CD502EE0BA0E00791EC5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9F38CD992EE1E5BA00791EC5 /* Build configuration list for PBXNativeTarget "EasitOpenTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9F38CD972EE1E5BA00791EC5 /* Debug */,
+				9F38CD982EE1E5BA00791EC5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

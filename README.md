@@ -38,9 +38,17 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Today Highlight**: Current day is highlighted in the schedule
 - **Safe Deletion**: Confirmation dialog before removing businesses
 
+### Settings & Customization
+- **Notification Management**: View permission status and enable/disable notifications
+- **Test Notifications**: Send test alerts to preview what change notifications look like
+- **Background Refresh Control**: Toggle background refresh on/off
+- **Custom Refresh Intervals**: Configure refresh frequency from 1-24 hours (default: 8 hours)
+- **System Settings Integration**: Quick access to iOS notification settings if disabled
+- **App Information**: View version and API provider details
+
 ### Data Refresh System
 - **Multiple Refresh Methods**: Pull-to-refresh, auto-refresh, manual per-business, and background refresh
-- **Background Refresh**: Automatically updates business hours even when app is closed (every 8 hours)
+- **Background Refresh**: Automatically updates business hours even when app is closed (configurable interval)
 - **Change Detection**: Automatically identifies when hours have been updated
 - **Smart Notifications**: Receive alerts when business hours change (requires permission)
 - **Detailed Change Tracking**: Know exactly what changed (hours, closures, phone, website)
@@ -122,7 +130,8 @@ EasitOpen/
 │   │   ├── BusinessCardView.swift  # Business card component
 │   │   ├── SearchView.swift        # Search interface
 │   │   ├── SearchResultRow.swift   # Search result component
-│   │   └── BusinessDetailView.swift # Detailed business view
+│   │   ├── BusinessDetailView.swift # Detailed business view
+│   │   └── SettingsView.swift      # Settings and preferences
 │   ├── Services/
 │   │   ├── GooglePlacesService.swift      # Google Places API integration
 │   │   ├── BusinessRefreshService.swift   # Data refresh logic
@@ -188,11 +197,11 @@ EasitOpen/
 - [x] Background refresh (when app is closed)
 - [x] Push notifications when hours change
 - [x] Detailed change tracking (hours, closures, contact info)
+- [x] Settings tab with notification and refresh controls
+- [x] User-configurable refresh intervals (1-24 hours)
+- [x] Test notification feature
 
 ## 🚧 Future Enhancements
-
-- [ ] Notification settings UI (frequency, types)
-- [ ] User-configurable refresh intervals
 - [ ] Custom app icon
 - [ ] Launch screen
 - [ ] Favorites/priority businesses

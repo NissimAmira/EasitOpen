@@ -14,6 +14,9 @@ struct ContentView: View {
     @State private var hasCheckedForRefresh = false
     @State private var hasRequestedNotifications = false
     
+    @AppStorage("backgroundRefreshEnabled") private var backgroundRefreshEnabled = true
+    @AppStorage("refreshIntervalHours") private var refreshIntervalHours = 8.0
+    
     private let refreshService = BusinessRefreshService()
     private let notificationManager = NotificationManager.shared
     private let backgroundRefreshManager = BackgroundRefreshManager.shared
@@ -29,6 +32,11 @@ struct ContentView: View {
                 .tabItem {
                     Label("Search", systemImage: "magnifyingglass")
                 }
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
         }
         .task {
             // Request notification permissions on first launch
@@ -42,8 +50,10 @@ struct ContentView: View {
                 hasCheckedForRefresh = true
                 await checkAndRefreshStaleData()
                 
-                // Schedule background refresh
-                backgroundRefreshManager.scheduleBackgroundRefresh()
+                // Schedule background refresh if enabled
+                if backgroundRefreshEnabled {
+                    backgroundRefreshManager.scheduleBackgroundRefresh(intervalHours: refreshIntervalHours)
+                }
             }
         }
     }

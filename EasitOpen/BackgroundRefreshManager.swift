@@ -25,12 +25,13 @@ class BackgroundRefreshManager {
     }
     
     // Schedule the next background refresh
-    func scheduleBackgroundRefresh() {
+    func scheduleBackgroundRefresh(intervalHours: Double = 8.0) {
         let request = BGAppRefreshTaskRequest(identifier: Self.backgroundTaskIdentifier)
         
-        // Schedule to run after at least 8 hours
+        // Schedule to run after the specified interval
         // iOS will run it when appropriate (device charging, good network, etc.)
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 8 * 60 * 60) // 8 hours
+        let intervalSeconds = intervalHours * 60 * 60
+        request.earliestBeginDate = Date(timeIntervalSinceNow: intervalSeconds)
         
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -100,5 +101,11 @@ class BackgroundRefreshManager {
             print("❌ Background refresh error: \(error)")
             return false
         }
+    }
+    
+    // Cancel all scheduled background refresh tasks
+    func cancelBackgroundRefresh() {
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.backgroundTaskIdentifier)
+        print("🛑 Background refresh cancelled")
     }
 }

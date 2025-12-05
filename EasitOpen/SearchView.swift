@@ -11,219 +11,123 @@ import CoreLocation
 
 struct SearchView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var searchText = ""
-    @State private var searchResults: [PlaceResult] = []
-    @State private var isSearching = false
-    @State private var errorMessage: String?
-    @State private var addedBusinessIds: Set<String> = []
-    
-    enum DistanceSortOption: String, CaseIterable {
-        case relevance = "Relevance"
-        case current = "Near Me"
-        case home = "Near Home"
-    }
-    
-    @State private var distanceSortOption: DistanceSortOption = .relevance
-    
-    private let placesService = GooglePlacesService()
+    @StateObject private var viewModel = SearchViewModel()
     @StateObject private var locationManager = LocationManager.shared
-    
-    // Get reference location based on sort option
-    private var referenceLocation: CLLocation? {
-        switch distanceSortOption {
-        case .relevance:
-            return nil
-        case .current:
-            return locationManager.currentLocation
-        case .home:
-            return locationManager.homeLocation
-        }
-    }
-    
-    // Sorted search results
-    private var sortedSearchResults: [PlaceResult] {
-        guard let refLocation = referenceLocation else { return searchResults }
-        
-        return searchResults.sorted { place1, place2 in
-            let loc1 = CLLocation(latitude: place1.location?.latitude ?? 0, longitude: place1.location?.longitude ?? 0)
-            let loc2 = CLLocation(latitude: place2.location?.latitude ?? 0, longitude: place2.location?.longitude ?? 0)
-            return loc1.distance(from: refLocation) < loc2.distance(from: refLocation)
-        }
-    }
     
     var body: some View {
         NavigationStack {
             VStack {
                 // Search results
-                if isSearching {
-                    ProgressView("Searching...")
-                        .padding()
-                } else if let error = errorMessage {
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.largeTitle)
-                            .foregroundColor(.orange)
-                        Text(error)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
-                } else if searchResults.isEmpty && !searchText.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.largeTitle)
-                            .foregroundColor(.gray)
-                        Text("No results found")
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
-                } else if searchResults.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.largeTitle)
-                            .foregroundColor(.gray)
-                        Text("Search for businesses")
-                            .font(.headline)
-                        Text("Try searching for coffee shops, restaurants, or stores")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    .padding()
+                if viewModel.isSearching {
+                    loadingView
+                } else if let error = viewModel.errorMessage {
+                    errorView(message: error)
+                } else if viewModel.searchResults.isEmpty && !viewModel.searchText.isEmpty {
+                    noResultsView
+                } else if viewModel.searchResults.isEmpty {
+                    emptyStateView
                 } else {
-                    VStack(spacing: 0) {
-                        // Sort picker
-                        if locationManager.currentLocation != nil || locationManager.homeLocation != nil {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Sort by")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal)
-                                
-                                Picker("Sort by", selection: $distanceSortOption) {
-                                    ForEach(DistanceSortOption.allCases, id: \.self) { option in
-                                        // Only show options that have available locations
-                                        if option == .relevance ||
-                                           (option == .current && locationManager.currentLocation != nil) ||
-                                           (option == .home && locationManager.homeLocation != nil) {
-                                            Text(option.rawValue).tag(option)
-                                        }
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .padding(.horizontal)
-                            }
-                            .padding(.vertical, 8)
-                            .background(Color(.systemGroupedBackground))
-                        }
-                        
-                        List(sortedSearchResults) { place in
-                            SearchResultRow(
-                                place: place,
-                                isAdded: addedBusinessIds.contains(place.id),
-                                referenceLocation: referenceLocation
-                            ) {
-                                addBusiness(place)
-                            }
-                        }
-                    }
+                    resultsView
                 }
             }
             .navigationTitle("Search")
-            .searchable(text: $searchText, prompt: "Search businesses")
+            .searchable(text: $viewModel.searchText, prompt: "Search businesses")
             .onSubmit(of: .search) {
-                performSearch()
+                Task { await viewModel.performSearch() }
             }
-            .onChange(of: searchText) { oldValue, newValue in
-                if newValue.isEmpty {
-                    searchResults = []
-                    errorMessage = nil
+            .onChange(of: viewModel.searchText) { _, _ in
+                viewModel.clearSearchIfEmpty()
+            }
+        }
+    }
+    
+    // MARK: - Subviews
+    
+    private var loadingView: some View {
+        ProgressView("Searching...")
+            .padding()
+    }
+    
+    private func errorView(message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.largeTitle)
+                .foregroundColor(.orange)
+            Text(message)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+    }
+    
+    private var noResultsView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "magnifyingglass")
+                .font(.largeTitle)
+                .foregroundColor(.gray)
+            Text("No results found")
+                .foregroundColor(.secondary)
+        }
+        .padding()
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "magnifyingglass")
+                .font(.largeTitle)
+                .foregroundColor(.gray)
+            Text("Search for businesses")
+                .font(.headline)
+            Text("Try searching for coffee shops, restaurants, or stores")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .padding()
+    }
+    
+    private var resultsView: some View {
+        VStack(spacing: 0) {
+            if locationManager.currentLocation != nil || locationManager.homeLocation != nil {
+                sortPicker
+            }
+            resultsList
+        }
+    }
+    
+    private var sortPicker: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Sort by")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.horizontal)
+            
+            Picker("Sort by", selection: $viewModel.distanceSortOption) {
+                ForEach(SearchViewModel.DistanceSortOption.allCases, id: \.self) { option in
+                    if option == .relevance ||
+                       (option == .current && locationManager.currentLocation != nil) ||
+                       (option == .home && locationManager.homeLocation != nil) {
+                        Text(option.rawValue).tag(option)
+                    }
                 }
             }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
         }
+        .padding(.vertical, 8)
+        .background(Color(.systemGroupedBackground))
     }
     
-    private func performSearch() {
-        guard !searchText.isEmpty else { return }
-        
-        isSearching = true
-        errorMessage = nil
-        
-        Task {
-            do {
-                searchResults = try await placesService.searchPlaces(query: searchText)
-                isSearching = false
-            } catch {
-                isSearching = false
-                errorMessage = "Failed to search. Please try again."
-                print("Search error: \(error)")
+    private var resultsList: some View {
+        List(viewModel.sortedResults()) { place in
+            SearchResultRow(
+                place: place,
+                isAdded: viewModel.addedBusinessIds.contains(place.id),
+                referenceLocation: viewModel.referenceLocation()
+            ) {
+                viewModel.addBusiness(place, to: modelContext)
             }
         }
-    }
-    
-    private func addBusiness(_ place: PlaceResult) {
-        print("Adding business: \(place.name)")
-        print("Place ID: \(place.id)")
-        
-        // Convert Google Place to our Business model
-        let schedule = convertOpeningHours(place.currentOpeningHours)
-        print("Converted \(schedule.count) schedule entries")
-        
-        let business = Business(
-            googlePlaceId: place.id, // Save Google Place ID for refreshing
-            name: place.name,
-            address: place.address,
-            latitude: place.location?.latitude ?? 0,
-            longitude: place.location?.longitude ?? 0,
-            phoneNumber: place.internationalPhoneNumber,
-            website: place.websiteUri,
-            openingHours: schedule
-        )
-        
-        print("Created business object")
-        
-        do {
-            modelContext.insert(business)
-            try modelContext.save()
-            print("Successfully saved business to database")
-            
-            // Mark as added (visual feedback)
-            addedBusinessIds.insert(place.id)
-        } catch {
-            print("Error saving business: \(error)")
-            errorMessage = "Failed to add business. Please try again."
-        }
-    }
-    
-    private func convertOpeningHours(_ hours: OpeningHours?) -> [DaySchedule] {
-        guard let periods = hours?.periods else { return [] }
-        
-        var schedules: [DaySchedule] = []
-        
-        for period in periods {
-            guard let openDay = period.open?.day,
-                  let openHour = period.open?.hour,
-                  let openMinute = period.open?.minute,
-                  let closeHour = period.close?.hour,
-                  let closeMinute = period.close?.minute else {
-                continue
-            }
-            
-            let openTime = openHour * 60 + openMinute
-            let closeTime = closeHour * 60 + closeMinute
-            
-            // Convert Google's day format (0 = Sunday) to Calendar format (1 = Sunday)
-            let weekday = openDay == 0 ? 1 : openDay + 1
-            
-            let schedule = DaySchedule(
-                weekday: weekday,
-                openTime: openTime,
-                closeTime: closeTime
-            )
-            schedules.append(schedule)
-        }
-        
-        return schedules
     }
 }
 

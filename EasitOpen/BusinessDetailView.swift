@@ -12,40 +12,12 @@ import SwiftData
 struct BusinessDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    let business: Business
-    
+    @StateObject private var viewModel: BusinessDetailViewModel
     @State private var region: MKCoordinateRegion
     @State private var showDeleteAlert = false
-    @State private var showEditLabel = false
-    @State private var editingLabel: String = ""
-    @State private var isRefreshing = false
-    @State private var refreshMessage: String?
-    @State private var refreshMessageType: MessageType = .success
-    
-    enum MessageType {
-        case success, info, error
-        
-        var color: Color {
-            switch self {
-            case .success: return .green
-            case .info: return .blue
-            case .error: return .red
-            }
-        }
-        
-        var icon: String {
-            switch self {
-            case .success: return "checkmark.circle.fill"
-            case .info: return "info.circle.fill"
-            case .error: return "exclamationmark.triangle.fill"
-            }
-        }
-    }
-    
-    private let refreshService = BusinessRefreshService()
     
     init(business: Business) {
-        self.business = business
+        _viewModel = StateObject(wrappedValue: BusinessDetailViewModel(business: business))
         _region = State(initialValue: MKCoordinateRegion(
             center: CLLocationCoordinate2D(
                 latitude: business.latitude,
@@ -63,22 +35,19 @@ struct BusinessDetailView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text(business.displayName)
+                                Text(viewModel.business.displayName)
                                     .font(.title)
                                     .fontWeight(.bold)
                                 
-                                Button(action: {
-                                    editingLabel = business.customLabel ?? business.name
-                                    showEditLabel = true
-                                }) {
+                                Button(action: { viewModel.startEditingLabel() }) {
                                     Image(systemName: "pencil.circle.fill")
                                         .font(.title3)
                                         .foregroundColor(.blue)
                                 }
                             }
                             
-                            if business.customLabel != nil {
-                                Text(business.name)
+                            if viewModel.business.customLabel != nil {
+                                Text(viewModel.business.name)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -87,17 +56,17 @@ struct BusinessDetailView: View {
                         Spacer()
                         
                         // Status badge
-                        Text(business.status.text)
+                        Text(viewModel.business.status.text)
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(business.status.color)
+                            .background(viewModel.business.status.color)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
                     
-                    Text(business.address)
+                    Text(viewModel.business.address)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -105,11 +74,11 @@ struct BusinessDetailView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "clock.arrow.circlepath")
                             .font(.caption2)
-                        Text("Updated \(business.lastUpdatedText)")
+                        Text("Updated \(viewModel.business.lastUpdatedText)")
                             .font(.caption)
                         
                         // Staleness indicator dot
-                        if business.isDataStale {
+                        if viewModel.business.isDataStale {
                             Circle()
                                 .fill(.orange)
                                 .frame(width: 6, height: 6)
@@ -120,7 +89,7 @@ struct BusinessDetailView: View {
                 .padding(.horizontal)
                 
                 // Map
-                Map(coordinateRegion: $region, annotationItems: [business]) { place in
+                Map(coordinateRegion: $region, annotationItems: [viewModel.business]) { place in
                     MapMarker(
                         coordinate: CLLocationCoordinate2D(
                             latitude: place.latitude,
@@ -135,7 +104,7 @@ struct BusinessDetailView: View {
                 
                 // Action buttons
                 HStack(spacing: 8) {
-                    if let phone = business.phoneNumber {
+                    if let phone = viewModel.business.phoneNumber {
                         Button(action: {
                             if let url = URL(string: "tel://\(phone.replacingOccurrences(of: " ", with: ""))") {
                                 UIApplication.shared.open(url)
@@ -153,7 +122,7 @@ struct BusinessDetailView: View {
                         .buttonStyle(.bordered)
                     }
                     
-                    if let website = business.website {
+                    if let website = viewModel.business.website {
                         Button(action: {
                             if let url = URL(string: website) {
                                 UIApplication.shared.open(url)
@@ -190,28 +159,28 @@ struct BusinessDetailView: View {
                     Text("Opening Hours")
                         .font(.headline)
                     
-                    if business.openingHours.isEmpty {
+                    if viewModel.business.openingHours.isEmpty {
                         Text("No hours available")
                             .foregroundColor(.secondary)
                     } else {
                         VStack(alignment: .leading, spacing: 8) {
-                            ForEach(sortedSchedule(), id: \.weekday) { schedule in
+                            ForEach(viewModel.sortedSchedule(), id: \.weekday) { schedule in
                                 HStack {
-                                    Text(dayName(for: schedule.weekday))
+                                    Text(viewModel.dayName(for: schedule.weekday))
                                         .frame(width: 100, alignment: .leading)
-                                        .fontWeight(isToday(schedule.weekday) ? .bold : .regular)
+                                        .fontWeight(viewModel.isToday(schedule.weekday) ? .bold : .regular)
                                     
                                     if schedule.isClosed {
                                         Text("Closed")
                                             .foregroundColor(.secondary)
                                     } else {
                                         Text("\(schedule.openTimeFormatted) - \(schedule.closeTimeFormatted)")
-                                            .foregroundColor(isToday(schedule.weekday) ? .primary : .secondary)
+                                            .foregroundColor(viewModel.isToday(schedule.weekday) ? .primary : .secondary)
                                     }
                                     
                                     Spacer()
                                     
-                                    if isToday(schedule.weekday) {
+                                    if viewModel.isToday(schedule.weekday) {
                                         Image(systemName: "circle.fill")
                                             .font(.caption2)
                                             .foregroundColor(.blue)
@@ -237,7 +206,7 @@ struct BusinessDetailView: View {
                         deleteBusiness()
                     }
                 } message: {
-                    Text("Are you sure you want to remove \(business.name) from your dashboard?")
+                    Text("Are you sure you want to remove \(viewModel.business.name) from your dashboard?")
                 }
             }
             .padding(.top)
@@ -245,46 +214,46 @@ struct BusinessDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { Task { await refreshBusiness() } }) {
-                    if isRefreshing {
+                Button(action: { Task { await viewModel.refreshBusiness() } }) {
+                    if viewModel.isRefreshing {
                         ProgressView()
                     } else {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
-                .disabled(isRefreshing)
+                .disabled(viewModel.isRefreshing)
             }
         }
         .overlay(alignment: .top) {
-            if let message = refreshMessage {
+            if let message = viewModel.refreshMessage {
                 HStack(spacing: 8) {
-                    Image(systemName: refreshMessageType.icon)
-                        .foregroundColor(refreshMessageType.color)
+                    Image(systemName: viewModel.refreshMessageType.icon)
+                        .foregroundColor(viewModel.refreshMessageType.color)
                     Text(message)
                         .font(.subheadline)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(refreshMessageType.color.opacity(0.15))
+                .background(viewModel.refreshMessageType.color.opacity(0.15))
                 .background(.ultraThinMaterial)
                 .cornerRadius(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(refreshMessageType.color.opacity(0.3), lineWidth: 1)
+                        .stroke(viewModel.refreshMessageType.color.opacity(0.3), lineWidth: 1)
                 )
                 .padding(.top, 8)
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .alert("Edit Label", isPresented: $showEditLabel) {
-            TextField("Custom name", text: $editingLabel)
+        .alert("Edit Label", isPresented: $viewModel.showEditLabel) {
+            TextField("Custom name", text: $viewModel.editingLabel)
             Button("Cancel", role: .cancel) { }
             Button("Save") {
-                saveLabel()
+                viewModel.saveLabel()
             }
-            if business.customLabel != nil {
+            if viewModel.business.customLabel != nil {
                 Button("Clear", role: .destructive) {
-                    business.customLabel = nil
+                    viewModel.clearLabel()
                 }
             }
         } message: {
@@ -292,80 +261,21 @@ struct BusinessDetailView: View {
         }
     }
     
-    private func sortedSchedule() -> [DaySchedule] {
-        // Sort by weekday (1 = Sunday, 7 = Saturday)
-        business.openingHours.sorted { $0.weekday < $1.weekday }
-    }
-    
-    private func dayName(for weekday: Int) -> String {
-        let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        let index = weekday - 1
-        return index >= 0 && index < days.count ? days[index] : "Unknown"
-    }
-    
-    private func isToday(_ weekday: Int) -> Bool {
-        let calendar = Calendar.current
-        let today = calendar.component(.weekday, from: Date())
-        return today == weekday
-    }
-    
     private func openInMaps() {
         let coordinate = CLLocationCoordinate2D(
-            latitude: business.latitude,
-            longitude: business.longitude
+            latitude: viewModel.business.latitude,
+            longitude: viewModel.business.longitude
         )
         let placemark = MKPlacemark(coordinate: coordinate)
         let mapItem = MKMapItem(placemark: placemark)
-        mapItem.name = business.name
+        mapItem.name = viewModel.business.name
         mapItem.openInMaps(launchOptions: [
             MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
         ])
     }
     
-    private func saveLabel() {
-        let trimmed = editingLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        business.customLabel = trimmed.isEmpty ? nil : trimmed
-    }
-    
-    @MainActor
-    private func refreshBusiness() async {
-        print("\n🔄 Manual refresh: \(business.displayName)")
-        isRefreshing = true
-        
-        do {
-            let changes = try await refreshService.refreshBusiness(business)
-            isRefreshing = false
-            
-            if !changes.isEmpty {
-                showRefreshMessage("Hours updated (\(changes.count) change\(changes.count == 1 ? "" : "s"))", type: .success)
-                print("✅ Business hours were updated with \(changes.count) changes")
-            } else {
-                showRefreshMessage("Already up to date", type: .info)
-                print("✅ No changes detected")
-            }
-        } catch {
-            isRefreshing = false
-            showRefreshMessage("Failed to refresh", type: .error)
-            print("❌ Refresh error: \(error)")
-        }
-    }
-    
-    private func showRefreshMessage(_ message: String, type: MessageType) {
-        withAnimation {
-            refreshMessage = message
-            refreshMessageType = type
-        }
-        
-        Task {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            withAnimation {
-                refreshMessage = nil
-            }
-        }
-    }
-    
     private func deleteBusiness() {
-        modelContext.delete(business)
+        modelContext.delete(viewModel.business)
         dismiss()
     }
 }

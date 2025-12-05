@@ -10,7 +10,12 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **Custom Labels**: Personalize business names (e.g., "My Favorite Cafe")
 - **Today's Hours**: View opening hours for today on each business card
 - **Smart Filtering**: Filter by Open, Closing Soon, or Closed status
-- **Intelligent Sorting**: Sort businesses by name or status (Open → Closing Soon → Closed)
+- **Distance-Based Sorting**: Sort businesses by:
+  - Name (alphabetically)
+  - Status (Open → Closing Soon → Closed)
+  - Distance from current location
+  - Distance from home location
+- **Distance Display**: See how far each business is from you (in km or meters)
 - **Search**: Quickly find a specific business in your saved list
 - **Pull-to-Refresh**: Swipe down to update all business hours from Google Places
 - **Auto-Refresh**: Stale data (>24 hours) automatically updates on app launch
@@ -20,6 +25,11 @@ An iOS app to help you quickly check opening hours and current status of your fa
 ### Search & Add
 - **Google Places Integration**: Search for any business using Google Places API
 - **Comprehensive Results**: See business name, address, and current status
+- **Distance Sorting**: Sort search results by:
+  - Relevance (Google's default ranking)
+  - Near Me (distance from current location)
+  - Near Home (distance from saved home location)
+- **Distance Display**: See how far each result is from your reference location
 - **One-Tap Add**: Add businesses to your dashboard with a single tap
 - **Visual Feedback**: Added businesses show a green checkmark
 - **Persistent Results**: Search results remain visible after adding a business
@@ -41,10 +51,16 @@ An iOS app to help you quickly check opening hours and current status of your fa
 
 ### Settings & Customization
 - **Notification Management**: View permission status and enable/disable notifications
-- **Test Notifications**: Send test alerts to preview what change notifications look like
-- **Background Refresh Control**: Toggle background refresh on/off
-- **Custom Refresh Intervals**: Configure refresh frequency from 1-24 hours (default: 8 hours)
-- **System Settings Integration**: Quick access to iOS notification settings if disabled
+- **Background Refresh Control**: Toggle automatic background refresh on/off (every 24 hours)
+- **Location Services**:
+  - View location permission status
+  - Enable location services for distance-based features
+  - Set home location via:
+    - Current device location
+    - Manual address entry with map preview
+  - View saved home address (not just coordinates)
+  - Clear or change home location anytime
+- **System Settings Integration**: Quick access to iOS settings for permissions
 - **App Information**: View version and API provider details
 
 ### Data Refresh System
@@ -64,10 +80,11 @@ An iOS app to help you quickly check opening hours and current status of your fa
 - **UI Framework**: SwiftUI
 - **Data Persistence**: SwiftData
 - **Maps**: MapKit
+- **Location Services**: CoreLocation for distance calculations and geocoding
 - **API Integration**: Google Places API (New)
 - **Background Tasks**: BGTaskScheduler for background refresh
 - **Notifications**: UserNotifications framework for change alerts
-- **Testing**: XCTest with comprehensive unit tests
+- **Testing**: XCTest with comprehensive unit tests (80+ tests)
 - **Minimum iOS Version**: iOS 17.0
 - **Architecture**: MVVM pattern with SwiftUI
 
@@ -123,21 +140,23 @@ An iOS app to help you quickly check opening hours and current status of your fa
 EasitOpen/
 ├── EasitOpen/
 │   ├── Models/
-│   │   ├── Business.swift          # Business data model
+│   │   ├── Business.swift          # Business data model with distance calculations
 │   │   └── DaySchedule.swift       # Opening hours model
 │   ├── Views/
 │   │   ├── ContentView.swift       # Main tab view
-│   │   ├── DashboardView.swift     # Business dashboard
-│   │   ├── BusinessCardView.swift  # Business card component
-│   │   ├── SearchView.swift        # Search interface
-│   │   ├── SearchResultRow.swift   # Search result component
+│   │   ├── DashboardView.swift     # Business dashboard with distance sorting
+│   │   ├── BusinessCardView.swift  # Business card component with distance display
+│   │   ├── SearchView.swift        # Search interface with distance sorting
+│   │   ├── SearchResultRow.swift   # Search result component with distance
 │   │   ├── BusinessDetailView.swift # Detailed business view
-│   │   └── SettingsView.swift      # Settings and preferences
+│   │   ├── SettingsView.swift      # Settings and preferences
+│   │   └── HomeLocationPickerView.swift # Home location picker with map
 │   ├── Services/
 │   │   ├── GooglePlacesService.swift      # Google Places API integration
 │   │   ├── BusinessRefreshService.swift   # Data refresh logic
 │   │   ├── NotificationManager.swift      # Local notification handling
-│   │   └── BackgroundRefreshManager.swift # Background task scheduling
+│   │   ├── BackgroundRefreshManager.swift # Background task scheduling
+│   │   └── LocationManager.swift          # Location services and home location
 │   ├── EasitOpenApp.swift          # App entry point
 │   └── Config.swift.template       # API key configuration template
 ├── README.md
@@ -154,19 +173,25 @@ EasitOpen/
 ## 🧪 Testing
 
 ### Unit Tests
-- Comprehensive test suite with 62+ tests across 4 test files
+- Comprehensive test suite with 80+ tests across 5 test files
 - Run tests with Cmd+U in Xcode
 - Tests cover:
-  - Business model and status logic (27 tests)
-  - Custom label functionality
-  - Opening hours calculations
-  - Closing soon threshold (60 minutes)
-  - Time formatting and edge cases
-  - Data staleness detection
-  - Timestamp tracking
+  - Business model and status logic (36 tests)
+    - Custom label functionality
+    - Opening hours calculations
+    - Closing soon threshold (60 minutes)
+    - Distance calculations and formatting
+    - Distance-based sorting
+  - Location services (15 tests)
+    - Home location storage and persistence
+    - Address geocoding and reverse geocoding
+    - Authorization status handling
+    - Edge cases and validation
   - Notification system and BusinessChange types (15 tests)
   - Refresh service time/day formatting (20 tests)
   - RefreshResult and error handling
+  - Time formatting and edge cases
+  - Data staleness detection
 
 ### On Simulator
 - Simply run from Xcode (Cmd+R)
@@ -198,19 +223,24 @@ EasitOpen/
 - [x] Change detection system
 - [x] Color-coded toast notifications
 - [x] Rate-limited API requests
-- [x] Background refresh (when app is closed)
+- [x] Background refresh (when app is closed, every 24 hours)
 - [x] Push notifications when hours change
 - [x] Detailed change tracking (hours, closures, contact info)
-- [x] Settings tab with notification and refresh controls
-- [x] User-configurable refresh intervals (1-24 hours)
-- [x] Test notification feature
+- [x] Settings tab with notification and location controls
+- [x] Location services integration
+- [x] Distance-based sorting (current location & home)
+- [x] Home location management with address search
+- [x] Map preview for home location selection
+- [x] Distance display on business cards and search results
 
 ## 📋 Documentation
 
 - **README.md** - Main project documentation (this file)
+- **LOCATION_FEATURES.md** - Complete guide to location services and distance features
 - **BACKGROUND_REFRESH_SETUP.md** - Step-by-step guide for enabling background refresh
 - **PHASE_4_6_IMPLEMENTATION.md** - Technical details of notification and background refresh features
 - **DATA_MIGRATION_GUIDE.md** - Guide for handling SwiftData schema changes and migrations
+- **CONTRIBUTING.md** - Guidelines for contributing code and reporting issues
 
 ## 🚧 Future Enhancements
 - [ ] Data export/import feature
@@ -218,10 +248,11 @@ EasitOpen/
 - [ ] Launch screen
 - [ ] Favorites/priority businesses
 - [ ] Edit business hours manually
-- [ ] Location-based sorting by distance
 - [ ] Dark mode optimizations
 - [ ] Widget support
 - [ ] iPad optimization
+- [ ] Route planning to multiple businesses
+- [ ] Nearby businesses discovery
 
 ## 📝 Learning Journey
 
@@ -230,13 +261,14 @@ This is my first iOS app, built to learn:
 - SwiftData for persistence
 - API integration with URLSession (async/await)
 - MapKit integration
+- CoreLocation services (location tracking, geocoding, distance calculations)
 - Background task scheduling with BGTaskScheduler
 - Local notifications with UserNotifications
 - MVVM architecture patterns
-- Unit testing with XCTest
+- Unit testing with XCTest (80+ tests)
 - Git workflow and version control
 - iOS app deployment and TestFlight
-- User experience design (status indicators, confirmation dialogs, notifications)
+- User experience design (status indicators, confirmation dialogs, notifications, location permissions)
 
 ## 📋 Documentation
 
@@ -268,21 +300,29 @@ Nissim Amira
 
 ## 📝 Release Notes
 
-### Version 1.0.0 (Current)
+### Version 1.1.0 (Current)
 
-**Features:**
+**New Features:**
+- ✅ Location services integration with CoreLocation
+- ✅ Distance-based sorting (current location & home)
+- ✅ Home location management with address search and map preview
+- ✅ Distance display on business cards (km/meters)
+- ✅ Simplified background refresh (fixed 24-hour interval)
+- ✅ 80+ unit tests including location features
+- ✅ Improved Settings UI with location management
+
+**Previous Features (v1.0.0):**
 - ✅ Complete business tracking system with real-time status
-- ✅ Background refresh with configurable intervals
+- ✅ Background refresh when app is closed
 - ✅ Smart notifications for hours changes
 - ✅ Settings tab with full customization
-- ✅ 62+ unit tests with comprehensive coverage
 - ✅ Optimized UI layouts (vertical quick action buttons)
 - ✅ Data migration protection for future updates
 
 **Known Issues:**
 - Background refresh requires manual Xcode configuration (see BACKGROUND_REFRESH_SETUP.md)
 - Background tasks work best on physical devices, not simulators
-- First-time update to v1.0.0 required re-adding businesses (one-time occurrence)
+- Location services require "When In Use" permission for distance features
 
 **Documentation:**
 - Complete setup guides

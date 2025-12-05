@@ -1,13 +1,15 @@
 import SwiftUI
 import UserNotifications
+import CoreLocation
+import MapKit
 
 struct SettingsView: View {
     @AppStorage("backgroundRefreshEnabled") private var backgroundRefreshEnabled = true
-    @AppStorage("refreshIntervalHours") private var refreshIntervalHours = 8.0
+    private let refreshIntervalHours = 24.0
     
     @StateObject private var notificationManager = NotificationManager.shared
-    @State private var showingTestNotification = false
-    @State private var testNotificationMessage: String?
+    @StateObject private var locationManager = LocationManager.shared
+    @State private var showHomeLocationSheet = false
     
     var body: some View {
         NavigationView {
@@ -54,18 +56,13 @@ struct SettingsView: View {
                         }
                     }
                     
-                    Button("Send Test Notification") {
-                        sendTestNotification()
-                    }
-                    .disabled(notificationManager.authorizationStatus != .authorized)
-                    
                 } header: {
                     Text("Notifications")
                 } footer: {
                     if notificationManager.authorizationStatus == .authorized {
                         Text("Notifications are enabled. To disable, change settings in iOS Settings app.")
                     } else {
-                        Text("Get notified when business hours change. Test notifications show what real change alerts look like.")
+                        Text("Get notified when business hours change.")
                     }
                 }
                 
@@ -76,39 +73,83 @@ struct SettingsView: View {
                             handleBackgroundRefreshToggle(enabled: newValue)
                         }
                     
-                    if backgroundRefreshEnabled {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Refresh Interval")
-                                .font(.subheadline)
-                            
-                            HStack {
-                                Text("\(Int(refreshIntervalHours))h")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                
-                                Slider(value: $refreshIntervalHours, in: 1...24, step: 1)
-                                    .onChange(of: refreshIntervalHours) { oldValue, newValue in
-                                        rescheduleBackgroundRefresh()
-                                    }
-                                
-                                Text("24h")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Text("Current: Every \(Int(refreshIntervalHours)) hour\(Int(refreshIntervalHours) == 1 ? "" : "s")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
                 } header: {
                     Text("Background Refresh")
                 } footer: {
                     if backgroundRefreshEnabled {
-                        Text("App will automatically refresh business hours in the background every \(Int(refreshIntervalHours)) hours. iOS schedules background tasks based on device conditions (charging, WiFi, etc.).")
+                        Text("App will automatically refresh business hours in the background every 24 hours. iOS schedules background tasks based on device conditions (charging, WiFi, etc.).")
                     } else {
                         Text("Background refresh is disabled. Business hours will only update when you open the app or manually refresh.")
+                    }
+                }
+                
+                // Location Section
+                Section {
+                    HStack {
+                        Image(systemName: "location.fill")
+                            .foregroundColor(.blue)
+                        Text("Location Services")
+                        Spacer()
+                        Text(locationStatusText)
+                            .foregroundColor(locationStatusColor)
+                            .font(.subheadline)
+                    }
+                    
+                    if locationManager.authorizationStatus == .denied {
+                        Button("Open iOS Settings") {
+                            openAppSettings()
+                        }
+                    } else if locationManager.authorizationStatus == .notDetermined {
+                        Button("Enable Location Services") {
+                            locationManager.requestPermission()
+                        }
+                    }
+                    
+                    // Home Location
+                    if locationManager.homeLocation != nil {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Home Location")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            if let address = locationManager.homeAddress {
+                                Text(address)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("Loading address...")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Button("Change Home Location") {
+                                showHomeLocationSheet = true
+                            }
+                            .font(.subheadline)
+                            
+                            Button("Clear Home Location") {
+                                locationManager.clearHomeLocation()
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.red)
+                        }
+                    } else {
+                        Button("Set Home Location") {
+                            showHomeLocationSheet = true
+                        }
+                    }
+                    
+                } header: {
+                    Text("Location")
+                } footer: {
+                    if locationManager.homeLocation != nil {
+                        Text("Home location is used to sort businesses by distance from home.")
+                    } else if locationManager.authorizationStatus == .denied || locationManager.authorizationStatus == .restricted {
+                        Text("Location services are disabled. Enable them to use distance-based sorting and set a home location.")
+                    } else if locationManager.currentLocation == nil {
+                        Text("Waiting for your location. Once available, you can set it as your home location for distance-based sorting.")
+                    } else {
+                        Text("Enable location services to sort businesses by distance. Set a home location for sorting by distance from home.")
                     }
                 }
                 
@@ -132,28 +173,13 @@ struct SettingsView: View {
                     Text("About")
                 }
             }
-            .navigationTitle("Settings")
+        .navigationTitle("Settings")
         }
-        .overlay(alignment: .top) {
-            if let message = testNotificationMessage {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text(message)
-                        .font(.subheadline)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(Color.green.opacity(0.15))
-                .background(.ultraThinMaterial)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.green.opacity(0.3), lineWidth: 1)
-                )
-                .padding(.top, 8)
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
+        .sheet(isPresented: $showHomeLocationSheet) {
+            HomeLocationPickerView(
+                locationManager: locationManager,
+                isPresented: $showHomeLocationSheet
+            )
         }
         .onAppear {
             notificationManager.checkAuthorizationStatus()
@@ -190,37 +216,35 @@ struct SettingsView: View {
         }
     }
     
-    private func openAppSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
+    private var locationStatusText: String {
+        switch locationManager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            return "Enabled"
+        case .denied, .restricted:
+            return "Disabled"
+        case .notDetermined:
+            return "Not Set"
+        @unknown default:
+            return "Unknown"
         }
     }
     
-    private func sendTestNotification() {
-        Task {
-            // Create a test change notification
-            let testChange = BusinessChange(
-                type: .hoursChanged(
-                    day: "Monday",
-                    oldHours: "8:00 AM - 5:00 PM",
-                    newHours: "9:00 AM - 6:00 PM"
-                ),
-                businessName: "Test Coffee Shop",
-                businessId: "test-id"
-            )
-            
-            await notificationManager.sendChangeNotification(for: [testChange])
-            
-            // Show confirmation
-            withAnimation {
-                testNotificationMessage = "Test notification sent!"
-            }
-            
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            
-            withAnimation {
-                testNotificationMessage = nil
-            }
+    private var locationStatusColor: Color {
+        switch locationManager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            return .green
+        case .denied, .restricted:
+            return .red
+        case .notDetermined:
+            return .orange
+        @unknown default:
+            return .secondary
+        }
+    }
+    
+    private func openAppSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
         }
     }
     

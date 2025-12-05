@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import CoreLocation
 
 struct SearchView: View {
     @Environment(\.modelContext) private var modelContext
@@ -16,7 +17,39 @@ struct SearchView: View {
     @State private var errorMessage: String?
     @State private var addedBusinessIds: Set<String> = []
     
+    enum DistanceSortOption: String, CaseIterable {
+        case relevance = "Relevance"
+        case current = "Near Me"
+        case home = "Near Home"
+    }
+    
+    @State private var distanceSortOption: DistanceSortOption = .relevance
+    
     private let placesService = GooglePlacesService()
+    @StateObject private var locationManager = LocationManager.shared
+    
+    // Get reference location based on sort option
+    private var referenceLocation: CLLocation? {
+        switch distanceSortOption {
+        case .relevance:
+            return nil
+        case .current:
+            return locationManager.currentLocation
+        case .home:
+            return locationManager.homeLocation
+        }
+    }
+    
+    // Sorted search results
+    private var sortedSearchResults: [PlaceResult] {
+        guard let refLocation = referenceLocation else { return searchResults }
+        
+        return searchResults.sorted { place1, place2 in
+            let loc1 = CLLocation(latitude: place1.location?.latitude ?? 0, longitude: place1.location?.longitude ?? 0)
+            let loc2 = CLLocation(latitude: place2.location?.latitude ?? 0, longitude: place2.location?.longitude ?? 0)
+            return loc1.distance(from: refLocation) < loc2.distance(from: refLocation)
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -58,12 +91,40 @@ struct SearchView: View {
                     }
                     .padding()
                 } else {
-                    List(searchResults) { place in
-                        SearchResultRow(
-                            place: place,
-                            isAdded: addedBusinessIds.contains(place.id)
-                        ) {
-                            addBusiness(place)
+                    VStack(spacing: 0) {
+                        // Sort picker
+                        if locationManager.currentLocation != nil || locationManager.homeLocation != nil {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Sort by")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal)
+                                
+                                Picker("Sort by", selection: $distanceSortOption) {
+                                    ForEach(DistanceSortOption.allCases, id: \.self) { option in
+                                        // Only show options that have available locations
+                                        if option == .relevance ||
+                                           (option == .current && locationManager.currentLocation != nil) ||
+                                           (option == .home && locationManager.homeLocation != nil) {
+                                            Text(option.rawValue).tag(option)
+                                        }
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .padding(.horizontal)
+                            }
+                            .padding(.vertical, 8)
+                            .background(Color(.systemGroupedBackground))
+                        }
+                        
+                        List(sortedSearchResults) { place in
+                            SearchResultRow(
+                                place: place,
+                                isAdded: addedBusinessIds.contains(place.id),
+                                referenceLocation: referenceLocation
+                            ) {
+                                addBusiness(place)
+                            }
                         }
                     }
                 }

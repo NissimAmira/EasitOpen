@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import CoreLocation
 
 enum BusinessStatus {
     case open
@@ -114,5 +115,30 @@ class Business: Identifiable {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
         return formatter.localizedString(for: lastUpdated, relativeTo: Date())
+    }
+    
+    // MARK: - Distance Calculations
+    
+    // Get CLLocation for this business
+    var location: CLLocation {
+        CLLocation(latitude: latitude, longitude: longitude)
+    }
+    
+    // Calculate distance from a given location (in meters)
+    func distance(from location: CLLocation) -> CLLocationDistance {
+        return self.location.distance(from: location)
+    }
+    
+    // Calculate distance from a given location (formatted)
+    func distanceText(from location: CLLocation) -> String {
+        let meters = distance(from: location)
+        let kilometers = meters / 1000.0
+        
+        // Use km for distances > 1km, meters otherwise
+        if kilometers >= 1.0 {
+            return String(format: "%.1f km", kilometers)
+        } else {
+            return String(format: "%.0f m", meters)
+        }
     }
 }

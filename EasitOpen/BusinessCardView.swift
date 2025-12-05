@@ -1,7 +1,9 @@
 import SwiftUI
+import CoreLocation
 
 struct BusinessCardView: View {
     let business: Business
+    var referenceLocation: CLLocation? = nil  // Optional location to show distance from
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -46,6 +48,14 @@ struct BusinessCardView: View {
                     }
                     
                     Spacer()
+                    
+                    // Distance display
+                    if let location = referenceLocation {
+                        Text(business.distanceText(from: location))
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                            .padding(.trailing, 4)
+                    }
                     
                     // Staleness indicator
                     if business.isDataStale {

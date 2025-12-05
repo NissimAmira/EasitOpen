@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct SearchResultRow: View {
     let place: PlaceResult
     let isAdded: Bool
+    var referenceLocation: CLLocation? = nil
     let onAdd: () -> Void
     
     var body: some View {
@@ -23,10 +25,27 @@ struct SearchResultRow: View {
                     .foregroundColor(.secondary)
                     .lineLimit(2)
                 
-                if let isOpen = place.currentOpeningHours?.openNow {
-                    Text(isOpen ? "Open now" : "Closed")
-                        .font(.caption)
-                        .foregroundColor(isOpen ? .green : .red)
+                HStack(spacing: 8) {
+                    if let isOpen = place.currentOpeningHours?.openNow {
+                        Text(isOpen ? "Open now" : "Closed")
+                            .font(.caption)
+                            .foregroundColor(isOpen ? .green : .red)
+                    }
+                    
+                    // Distance display
+                    if let refLoc = referenceLocation,
+                       let placeLat = place.location?.latitude,
+                       let placeLon = place.location?.longitude {
+                        let placeLocation = CLLocation(latitude: placeLat, longitude: placeLon)
+                        let distance = refLoc.distance(from: placeLocation)
+                        let kilometers = distance / 1000.0
+                        
+                        Text(kilometers >= 1.0 ?
+                             String(format: "%.1f km", kilometers) :
+                             String(format: "%.0f m", distance))
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
                 }
             }
             

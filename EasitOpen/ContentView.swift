@@ -15,11 +15,12 @@ struct ContentView: View {
     @State private var hasRequestedNotifications = false
     
     @AppStorage("backgroundRefreshEnabled") private var backgroundRefreshEnabled = true
-    @AppStorage("refreshIntervalHours") private var refreshIntervalHours = 8.0
+    private let refreshIntervalHours = 24.0
     
     private let refreshService = BusinessRefreshService()
     private let notificationManager = NotificationManager.shared
     private let backgroundRefreshManager = BackgroundRefreshManager.shared
+    private let locationManager = LocationManager.shared
     
     var body: some View {
         TabView {
@@ -44,6 +45,9 @@ struct ContentView: View {
                 hasRequestedNotifications = true
                 await requestNotificationPermissions()
             }
+            
+            // Start location services
+            locationManager.startUpdatingLocation()
             
             // Only check once per app launch
             if !hasCheckedForRefresh {

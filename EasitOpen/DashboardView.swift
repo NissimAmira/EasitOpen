@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftData
+import CoreLocation
 
 struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openURL) private var openURL
     @Query private var businesses: [Business]
     @State private var showDeleteAlert = false
     @State private var businessToDelete: Business?
@@ -12,6 +14,9 @@ struct DashboardView: View {
     @State private var isRefreshing = false
     @State private var refreshMessage: String?
     @State private var refreshMessageType: MessageType = .success
+    @State private var showLocationAlert = false
+    @State private var locationAlertMessage = ""
+    @State private var locationAlertAction: (() -> Void)?
     
     enum MessageType {
         case success, info, warning
@@ -34,10 +39,13 @@ struct DashboardView: View {
     }
     
     private let refreshService = BusinessRefreshService()
+    @StateObject private var locationManager = LocationManager.shared
 
     enum SortOption: String, CaseIterable {
         case name = "Name"
         case status = "Status"
+        case distanceCurrent = "Distance (Current)"
+        case distanceHome = "Distance (Home)"
     }
 
     enum FilterOption: String, CaseIterable {
@@ -45,6 +53,18 @@ struct DashboardView: View {
         case open = "Open"
         case closingSoon = "Closing Soon"
         case closed = "Closed"
+    }
+    
+    // Determine which reference location to show based on sort option
+    private var referenceLocationForDisplay: CLLocation? {
+        switch sortOption {
+        case .distanceCurrent:
+            return locationManager.currentLocation
+        case .distanceHome:
+            return locationManager.homeLocation
+        default:
+            return nil
+        }
     }
     
     private var filteredAndSortedBusinesses: [Business] {
@@ -80,6 +100,16 @@ struct DashboardView: View {
                 let priority1 = statusPriority(business1.status)
                 let priority2 = statusPriority(business2.status)
                 return priority1 < priority2
+            }
+        case .distanceCurrent:
+            // Sort by distance from current location
+            if let currentLocation = locationManager.currentLocation {
+                result.sort { $0.distance(from: currentLocation) < $1.distance(from: currentLocation) }
+            }
+        case .distanceHome:
+            // Sort by distance from home
+            if let homeLocation = locationManager.homeLocation {
+                result.sort { $0.distance(from: homeLocation) < $1.distance(from: homeLocation) }
             }
         }
         
@@ -140,6 +170,9 @@ struct DashboardView: View {
                                 .font(.subheadline)
                         }
                         .buttonStyle(.bordered)
+                        .onChange(of: sortOption) { oldValue, newValue in
+                            validateSortOption(newValue, previousOption: oldValue)
+                        }
                         
                         Spacer()
                         
@@ -165,7 +198,10 @@ struct DashboardView: View {
                         List {
                             ForEach(filteredAndSortedBusinesses) { business in
                                 NavigationLink(destination: BusinessDetailView(business: business)) {
-                                    BusinessCardView(business: business)
+                                    BusinessCardView(
+                                        business: business,
+                                        referenceLocation: referenceLocationForDisplay
+                                    )
                                 }
                             }
                             .onDelete(perform: promptDelete)
@@ -212,6 +248,19 @@ struct DashboardView: View {
             if let business = businessToDelete {
                 Text("Are you sure you want to remove \(business.name) from your dashboard?")
             }
+        }
+        .alert("Location Required", isPresented: $showLocationAlert) {
+            if let action = locationAlertAction {
+                Button("Open Settings") {
+                    action()
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                // Reset to name sort
+                sortOption = .name
+            }
+        } message: {
+            Text(locationAlertMessage)
         }
     }
     
@@ -271,6 +320,49 @@ struct DashboardView: View {
             withAnimation {
                 refreshMessage = nil
             }
+        }
+    }
+    
+    private func validateSortOption(_ option: SortOption, previousOption: SortOption) {
+        var shouldShowAlert = false
+        
+        switch option {
+        case .distanceCurrent:
+            if locationManager.currentLocation == nil {
+                shouldShowAlert = true
+                // Check authorization status
+                switch locationManager.authorizationStatus {
+                case .notDetermined:
+                    locationAlertMessage = "To sort by distance from your current location, please enable location services."
+                    locationAlertAction = {
+                        locationManager.requestPermission()
+                    }
+                case .denied, .restricted:
+                    locationAlertMessage = "Location access is disabled. Please enable it in Settings to sort by distance."
+                    locationAlertAction = {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            self.openURL(url)
+                        }
+                    }
+                default:
+                    locationAlertMessage = "Waiting for your location. Please try again in a moment."
+                    locationAlertAction = nil
+                }
+            }
+            
+        case .distanceHome:
+            if locationManager.homeLocation == nil {
+                shouldShowAlert = true
+                locationAlertMessage = "You haven't set a home location yet. Go to Settings to set your home location."
+                locationAlertAction = nil
+            }
+            
+        default:
+            break
+        }
+        
+        if shouldShowAlert {
+            showLocationAlert = true
         }
     }
 }

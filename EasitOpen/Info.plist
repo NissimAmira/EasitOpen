@@ -10,5 +10,7 @@
 	<array>
 		<string>fetch</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>EasitOpen uses your location to show distances to businesses and sort by proximity.</string>
 </dict>
 </plist>
